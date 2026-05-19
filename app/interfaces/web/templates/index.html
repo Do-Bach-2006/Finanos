@@ -1,0 +1,1914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinanOS Dashboard & Configuration</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-base: #2b3339;
+            --font-main: 'Inter', sans-serif;
+            --font-title: 'Outfit', sans-serif;
+            --primary-glow: linear-gradient(135deg, #a7c080 0%, #7fbbb3 50%, #dbbc7f 100%);
+            --accent-purple: #d699b6;
+            --accent-blue: #7fbbb3;
+            --accent-cyan: #83c092;
+            --accent-green: #a7c080;
+            --accent-red: #e67e80;
+            --accent-orange: #e69875;
+            --glass-bg: rgba(52, 63, 67, 0.45);
+            --glass-border: rgba(255, 255, 255, 0.06);
+            --text-primary: #d3c6aa;
+            --text-secondary: #9da9a0;
+            --text-muted: #7a8478;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            scrollbar-width: thin;
+            scrollbar-color: var(--accent-green) var(--bg-base);
+        }
+
+        /* Custom Scrollbar */
+        *::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        *::-webkit-scrollbar-track {
+            background: var(--bg-base);
+        }
+        *::-webkit-scrollbar-thumb {
+            background-color: rgba(167, 192, 128, 0.3);
+            border-radius: 20px;
+            border: 2px solid var(--bg-base);
+        }
+        *::-webkit-scrollbar-thumb:hover {
+            background-color: rgba(167, 192, 128, 0.6);
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-primary);
+            font-family: var(--font-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Colorful Blur Background Blobs */
+        .bg-blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(120px);
+            z-index: -1;
+            opacity: 0.25;
+            pointer-events: none;
+        }
+        .blob-1 {
+            width: 500px;
+            height: 500px;
+            background: var(--accent-purple);
+            top: -100px;
+            left: -100px;
+            animation: float 20s infinite alternate;
+        }
+        .blob-2 {
+            width: 600px;
+            height: 600px;
+            background: var(--accent-blue);
+            bottom: -150px;
+            right: -100px;
+            animation: float 25s infinite alternate-reverse;
+        }
+        .blob-3 {
+            width: 400px;
+            height: 400px;
+            background: var(--accent-cyan);
+            top: 40%;
+            right: 15%;
+            opacity: 0.15;
+        }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(50px, 30px) scale(1.1); }
+        }
+
+        /* Layout Container */
+        .app-container {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        /* Header Navigation */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2.5rem;
+            background: rgba(15, 23, 42, 0.3);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            padding: 1rem 2rem;
+            border-radius: 20px;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            font-size: 2.2rem;
+            background: var(--primary-glow);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+            font-family: var(--font-title);
+        }
+
+        .logo-text {
+            font-family: var(--font-title);
+            font-size: 1.6rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            background: linear-gradient(to right, var(--text-primary), var(--text-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 8px;
+            background: rgba(0, 0, 0, 0.25);
+            padding: 6px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .nav-tab {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-family: var(--font-main);
+            font-weight: 500;
+            font-size: 0.95rem;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-tab:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .nav-tab.active {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* Main View Sections */
+        .view-section {
+            display: none;
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+
+        .view-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* NET WORTH OVERVIEW */
+        .net-worth-banner {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .net-worth-banner::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--primary-glow);
+        }
+
+        .nw-details {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .nw-label {
+            font-size: 0.95rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--accent-cyan);
+        }
+
+        .nw-value-container {
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+        }
+
+        .nw-value {
+            font-family: var(--font-title);
+            font-size: 3.5rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+            background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nw-currency {
+            font-family: var(--font-title);
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+        }
+
+        .nw-visual {
+            width: 140px;
+            height: 140px;
+            position: relative;
+        }
+
+        /* Dashboard Grid Layout */
+        .grid-3col {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Glass Cards */
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 1.8rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+            border-color: rgba(255, 255, 255, 0.12);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding-bottom: 0.8rem;
+        }
+
+        .card-title {
+            font-family: var(--font-title);
+            font-size: 1.25rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            font-size: 1.2rem;
+        }
+
+        .bg-purp { background: rgba(139, 92, 246, 0.15); color: var(--accent-purple); }
+        .bg-blue { background: rgba(59, 130, 246, 0.15); color: var(--accent-blue); }
+        .bg-cyan { background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan); }
+        .bg-green { background: rgba(16, 185, 129, 0.15); color: var(--accent-green); }
+
+        .card-value-summary {
+            font-family: var(--font-title);
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        /* Items list */
+        .items-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            overflow-y: auto;
+            max-height: 250px;
+            padding-right: 4px;
+        }
+
+        .list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 14px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.02);
+            border-radius: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .list-item:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .item-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .item-name {
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .item-subtext {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .item-values {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 2px;
+        }
+
+        .item-amount {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .item-converted {
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+        }
+
+        /* DEBT SPLIT COLUMNS */
+        .debt-ledger {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .ledger-col {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .ledger-col-header {
+            font-size: 0.82rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+
+        .receivables-header { color: var(--accent-green); }
+        .liabilities-header { color: var(--accent-red); }
+
+        .empty-state {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 2rem 1rem;
+            font-size: 0.9rem;
+            font-style: italic;
+        }
+
+        /* CONFIGURATION / SETTINGS STYLES */
+        .settings-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.8rem;
+        }
+
+        @media (min-width: 900px) {
+            .settings-grid {
+                grid-template-columns: 280px 1fr;
+            }
+        }
+
+        .settings-sidebar {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 1.2rem;
+            height: fit-content;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .sidebar-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-family: var(--font-main);
+            font-weight: 500;
+            font-size: 0.9rem;
+            padding: 12px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-btn:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .sidebar-btn.active {
+            color: var(--text-primary);
+            background: rgba(139, 92, 246, 0.12);
+            border-left: 3px solid var(--accent-purple);
+            font-weight: 600;
+        }
+
+        .settings-content {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .settings-panel {
+            display: none;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .settings-panel.active {
+            display: block;
+        }
+
+        .form-group-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.2rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 1.2rem;
+        }
+
+        .form-group label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group input, .form-group select {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            padding: 12px 16px;
+            color: var(--text-primary);
+            font-family: var(--font-main);
+            font-size: 0.92rem;
+            transition: all 0.2s ease;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.2);
+            background: rgba(0, 0, 0, 0.55);
+        }
+
+        .form-help {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        /* Inline Button Row */
+        .input-with-action {
+            display: flex;
+            gap: 8px;
+        }
+
+        .input-with-action input {
+            flex-grow: 1;
+        }
+
+        /* Interactive Buttons */
+        .btn {
+            font-family: var(--font-main);
+            font-weight: 600;
+            font-size: 0.9rem;
+            padding: 10px 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--primary-glow);
+            color: #ffffff;
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.25);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
+            filter: brightness(1.1);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .btn-test {
+            background: rgba(59, 130, 246, 0.12);
+            border: 1px solid rgba(59, 130, 246, 0.25);
+            color: #60a5fa;
+            white-space: nowrap;
+        }
+
+        .btn-test:hover {
+            background: rgba(59, 130, 246, 0.25);
+            border-color: #60a5fa;
+        }
+
+        .btn-save-container {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        /* Status Toast Alert */
+        .toast-container {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            pointer-events: none;
+        }
+
+        .toast {
+            pointer-events: auto;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 14px;
+            padding: 14px 20px;
+            min-width: 300px;
+            max-width: 450px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transform: translateX(120%);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast-icon {
+            font-size: 1.3rem;
+            flex-shrink: 0;
+        }
+
+        .toast-content {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .toast-title {
+            font-weight: 600;
+            font-size: 0.92rem;
+        }
+
+        .toast-msg {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+        }
+
+        .toast-success { border-left: 4px solid var(--accent-green); }
+        .toast-success .toast-icon { color: var(--accent-green); }
+        .toast-error { border-left: 4px solid var(--accent-red); }
+        .toast-error .toast-icon { color: var(--accent-red); }
+        .toast-info { border-left: 4px solid var(--accent-blue); }
+        .toast-info .toast-icon { color: var(--accent-blue); }
+
+        /* Shimmer Loading Animation */
+        .shimmer {
+            background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 75%);
+            background-size: 200% 100%;
+            animation: loading-shimmer 1.5s infinite;
+        }
+
+        @keyframes loading-shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* SVG Icons Inline replacement */
+        .icon-svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .spinner {
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255,255,255,0.2);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: none;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .btn-loading .spinner {
+            display: inline-block;
+        }
+        .btn-loading .btn-text-content {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-blob blob-1"></div>
+    <div class="bg-blob blob-2"></div>
+    <div class="bg-blob blob-3"></div>
+
+    <div class="app-container">
+        <!-- HEADER -->
+        <header>
+            <div class="logo-container">
+                <span class="logo-icon">▲</span>
+                <span class="logo-text">FinanOS</span>
+            </div>
+            <div class="nav-tabs">
+                <button class="nav-tab active" id="tab-dashboard" onclick="switchView('dashboard')">
+                    <svg class="icon-svg" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+                    Dashboard
+                </button>
+                <button class="nav-tab" id="tab-settings" onclick="switchView('settings')">
+                    <svg class="icon-svg" viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+                    Settings & Config
+                </button>
+            </div>
+        </header>
+
+        <!-- DASHBOARD VIEW -->
+        <div class="view-section active" id="section-dashboard">
+            <!-- Net Worth Banner -->
+            <div class="net-worth-banner">
+                <div class="nw-details">
+                    <span class="nw-label">Consolidated Net Worth</span>
+                    <div class="nw-value-container">
+                        <span class="nw-value" id="net-worth-amount">0.00</span>
+                        <span class="nw-currency" id="currency-symbol-nw">VND</span>
+                    </div>
+                </div>
+                <div class="nw-visual">
+                    <canvas id="allocation-chart"></canvas>
+                </div>
+            </div>
+
+            <!-- Accounts Warnings Alert Banner -->
+            <div id="warnings-banner" class="glass-card" style="display: none; background: rgba(230, 126, 128, 0.08); border: 1px solid rgba(230, 126, 128, 0.25); border-left: 5px solid var(--accent-red); padding: 1.2rem; margin-top: 1.5rem; margin-bottom: 1.5rem; border-radius: 16px; align-items: center; gap: 15px; animation: slideIn 0.3s ease-out;">
+                <div style="font-size: 1.8rem; line-height: 1;">⚠️</div>
+                <div style="flex-grow: 1;">
+                    <div style="font-weight: 700; color: var(--accent-red); margin-bottom: 5px; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.5px;">Account Warnings & Risk Alerts</div>
+                    <ul id="warnings-text" style="font-size: 0.88rem; color: var(--text-secondary); line-height: 1.5; margin: 0; padding-left: 20px;">
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Detailed Grid -->
+            <div class="grid-3col">
+                <!-- Cash Accounts Card -->
+                <div class="glass-card">
+                    <div class="card-header">
+                        <span class="card-title">
+                            <span class="card-icon bg-blue">🏦</span>
+                            Cash & Bank Accounts
+                        </span>
+                    </div>
+                    <div class="card-value-summary" id="cash-summary">0.00 VND</div>
+                    <ul class="items-list" id="cash-list">
+                        <!-- Loaded dynamically -->
+                        <div class="shimmer" style="height: 45px; border-radius: 12px; margin-bottom: 8px;"></div>
+                        <div class="shimmer" style="height: 45px; border-radius: 12px;"></div>
+                    </ul>
+                </div>
+
+                <!-- Portfolio holdings Card -->
+                <div class="glass-card">
+                    <div class="card-header">
+                        <span class="card-title">
+                            <span class="card-icon bg-purp">📈</span>
+                            Assets & Holdings
+                        </span>
+                    </div>
+                    <div class="card-value-summary" id="portfolio-summary">0.00 VND</div>
+                    <ul class="items-list" id="portfolio-list" style="max-height: 280px;">
+                        <!-- Loaded dynamically -->
+                        <div class="shimmer" style="height: 45px; border-radius: 12px; margin-bottom: 8px;"></div>
+                        <div class="shimmer" style="height: 45px; border-radius: 12px;"></div>
+                    </ul>
+                </div>
+
+            </div>
+
+            <!-- EXPANDED DETAILED DEBT & BORROWERS LEDGER -->
+            <div class="glass-card" style="margin-top: 1.8rem; padding: 2rem;">
+                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <span class="card-title" style="font-size: 1.5rem;">
+                        <span class="card-icon bg-cyan" style="width: 42px; height: 42px; font-size: 1.4rem;">🤝</span>
+                        Detailed Debt & Borrowers Ledger
+                    </span>
+                    <span class="card-value-summary" id="debt-summary" style="margin-bottom: 0; font-size: 1.4rem; color: var(--accent-cyan);">Net: 0.00 VND</span>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 2rem; align-items: start;">
+                    <!-- Receivables Column -->
+                    <div class="glass-card" style="background: rgba(167, 192, 128, 0.03); border: 1px solid rgba(167, 192, 128, 0.1); padding: 1.5rem; border-radius: 16px;">
+                        <span class="ledger-col-header receivables-header" style="font-size: 1.1rem; border-bottom: 2px solid var(--accent-green); padding-bottom: 8px; margin-bottom: 1rem; display: block; font-family: var(--font-title);">Owed To Me (Receivables)</span>
+                        <ul class="items-list" id="receivables-list" style="max-height: 400px; gap: 15px;">
+                            <!-- Dynamic -->
+                        </ul>
+                    </div>
+                    
+                    <!-- Liabilities Column -->
+                    <div class="glass-card" style="background: rgba(230, 126, 128, 0.03); border: 1px solid rgba(230, 126, 128, 0.1); padding: 1.5rem; border-radius: 16px;">
+                        <span class="ledger-col-header liabilities-header" style="font-size: 1.1rem; border-bottom: 2px solid var(--accent-red); padding-bottom: 8px; margin-bottom: 1rem; display: block; font-family: var(--font-title);">I Owe (Liabilities)</span>
+                        <ul class="items-list" id="liabilities-list" style="max-height: 400px; gap: 15px;">
+                            <!-- Dynamic -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Command & Spending History Card -->
+            <div class="glass-card" style="margin-top: 1.8rem; padding: 1.5rem;">
+                <div class="card-header" style="margin-bottom: 1.2rem;">
+                    <span class="card-title">
+                        <span class="card-icon bg-blue" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">📜</span>
+                        Command & Spending History Log
+                    </span>
+                </div>
+                <div style="max-height: 400px; overflow-y: auto;">
+                    <table style="width: 100%; border-collapse: collapse; text-align: left;" id="history-table">
+                        <thead>
+                            <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: var(--text-secondary); font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
+                                <th style="padding: 10px 15px;">Date & Time</th>
+                                <th style="padding: 10px 15px;">Activity</th>
+                                <th style="padding: 10px 15px;">Description</th>
+                                <th style="padding: 10px 15px; text-align: right;">Amount (VND)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-list">
+                            <!-- Loaded dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- SETTINGS VIEW -->
+        <div class="view-section" id="section-settings">
+            <div class="settings-grid">
+                <!-- Sidebar navigation inside settings -->
+                <nav class="settings-sidebar">
+                    <button class="sidebar-btn active" id="btn-panel-core" onclick="switchSettingsPanel('core')">
+                        🔧 System & Preferences
+                    </button>
+                    <button class="sidebar-btn" id="btn-panel-firefly" onclick="switchSettingsPanel('firefly')">
+                        🔥 Firefly III Integration
+                    </button>
+                    <button class="sidebar-btn" id="btn-panel-telegram" onclick="switchSettingsPanel('telegram')">
+                        💬 Telegram Bot
+                    </button>
+                    <button class="sidebar-btn" id="btn-panel-gemini" onclick="switchSettingsPanel('gemini')">
+                        🧠 Generative AI (Gemini)
+                    </button>
+                    <button class="sidebar-btn" id="btn-panel-providers" onclick="switchSettingsPanel('providers')">
+                        📈 Market & Providers
+                    </button>
+                </nav>
+
+                <!-- Settings Forms Area -->
+                <div class="settings-content">
+                    <form id="settings-form" onsubmit="event.preventDefault(); saveSettings();">
+                        <!-- Panel 1: Core preferences -->
+                        <div class="settings-panel active glass-card" id="panel-core">
+                            <div class="card-header">
+                                <span class="card-title">System & Preferences</span>
+                            </div>
+                            <div class="form-group-row">
+                                <div class="form-group">
+                                    <label for="input-default-currency">Default System Currency</label>
+                                    <input type="text" id="input-default-currency" value="VND" placeholder="VND, USD, etc.">
+                                    <span class="form-help">Main consolidation currency for net worth calculations and bot reports.</span>
+                                </div>
+                                <div class="form-group">
+                                    <label for="input-app-env">Environment (Mode)</label>
+                                    <select id="input-app-env">
+                                        <option value="local">Local (Development)</option>
+                                        <option value="production">Production</option>
+                                    </select>
+                                    <span class="form-help">Current execution environment mode.</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="input-database-url">Database Connection URL</label>
+                                <input type="text" id="input-database-url" value="sqlite:///finanos.db">
+                                <span class="form-help">SQLite connection string. Keep default unless changing DB provider.</span>
+                            </div>
+                        </div>
+
+                        <!-- Panel 2: Firefly III Integration -->
+                        <div class="settings-panel glass-card" id="panel-firefly">
+                            <div class="card-header">
+                                <span class="card-title">Firefly III Integration</span>
+                            </div>
+                            <div class="form-group">
+                                <label for="input-firefly-url">Firefly III Base URL</label>
+                                <div class="input-with-action">
+                                    <input type="url" id="input-firefly-url" placeholder="http://192.168.x.x/">
+                                    <button type="button" class="btn btn-test" id="btn-test-firefly" onclick="testFireflyConnection()">
+                                        <span class="spinner"></span>
+                                        <span class="btn-text-content">Test Connection</span>
+                                    </button>
+                                </div>
+                                <span class="form-help">The hosting endpoint of your Firefly III server (including http:// or https://).</span>
+                            </div>
+                            <div class="form-group">
+                                <label for="input-firefly-token">Personal Access Token</label>
+                                <input type="password" id="input-firefly-token" placeholder="Long access token (Bearer jwt)">
+                                <span class="form-help">Create this in your Firefly III -> Profile -> OAuth -> Personal Access Tokens.</span>
+                            </div>
+                        </div>
+
+                        <!-- Panel 3: Telegram Bot -->
+                        <div class="settings-panel glass-card" id="panel-telegram">
+                            <div class="card-header">
+                                <span class="card-title">Telegram Bot Integration</span>
+                            </div>
+                            <div class="form-group">
+                                <label for="input-telegram-token">Telegram Bot Token</label>
+                                <div class="input-with-action">
+                                    <input type="password" id="input-telegram-token" placeholder="123456:ABC-DEF_etc">
+                                    <button type="button" class="btn btn-test" id="btn-test-telegram" onclick="testTelegramConnection()">
+                                        <span class="spinner"></span>
+                                        <span class="btn-text-content">Test Token</span>
+                                    </button>
+                                </div>
+                                <span class="form-help">Token provided by @BotFather to operate the FinanOS Interactive Bot.</span>
+                            </div>
+                        </div>
+
+                        <!-- Panel 4: Gemini AI -->
+                        <div class="settings-panel glass-card" id="panel-gemini">
+                            <div class="card-header">
+                                <span class="card-title">Generative AI (Google Gemini)</span>
+                            </div>
+                            <div class="form-group">
+                                <label for="input-gemini-key">Gemini API Key</label>
+                                <div class="input-with-action">
+                                    <input type="password" id="input-gemini-key" placeholder="AIzaSy...">
+                                    <button type="button" class="btn btn-test" id="btn-test-gemini" onclick="testGeminiConnection()">
+                                        <span class="spinner"></span>
+                                        <span class="btn-text-content">Test Key</span>
+                                    </button>
+                                </div>
+                                <span class="form-help">Gemini Flash key used by FinanOS to parse values, extract categories and categorize logs automatically.</span>
+                            </div>
+                        </div>
+
+                        <!-- Panel 5: Providers & Market APIs -->
+                        <div class="settings-panel glass-card" id="panel-providers">
+                            <div class="card-header">
+                                <span class="card-title">Market Feed & API Providers</span>
+                            </div>
+                            
+                            <!-- Dropdowns Row -->
+                            <div class="form-group-row">
+                                <div class="form-group">
+                                    <label for="select-crypto-provider">Preferred Crypto Provider</label>
+                                    <select id="select-crypto-provider">
+                                        <option value="coingecko">CoinGecko</option>
+                                        <option value="coinmarketcap">CoinMarketCap</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="select-stock-provider">Preferred Stocks Provider</label>
+                                    <select id="select-stock-provider">
+                                        <option value="finnhub">Finnhub</option>
+                                        <option value="alphavantage">AlphaVantage</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group-row">
+                                <div class="form-group">
+                                    <label for="select-forex-provider">Preferred Forex Provider</label>
+                                    <select id="select-forex-provider">
+                                        <option value="exchangerate_api">ExchangeRate API</option>
+                                        <option value="currencyfreaks">CurrencyFreaks</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="select-cs2-provider">Preferred CS2 Provider</label>
+                                    <select id="select-cs2-provider">
+                                        <option value="steam">Steam Marketplace</option>
+                                        <option value="steam_analysis">Steam Analysis</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.05); margin: 1.5rem 0;">
+
+                            <div class="form-group-row">
+                                <div class="form-group">
+                                    <label for="input-coingecko-key">CoinGecko API Key</label>
+                                    <input type="password" id="input-coingecko-key">
+                                </div>
+                                <div class="form-group">
+                                    <label for="input-coinmarketcap-key">CoinMarketCap API Key</label>
+                                    <input type="password" id="input-coinmarketcap-key">
+                                </div>
+                            </div>
+
+                            <div class="form-group-row">
+                                <div class="form-group">
+                                    <label for="input-finnhub-key">Finnhub API Key</label>
+                                    <input type="password" id="input-finnhub-key">
+                                </div>
+                                <div class="form-group">
+                                    <label for="input-alphavantage-key">AlphaVantage API Key</label>
+                                    <input type="password" id="input-alphavantage-key">
+                                </div>
+                            </div>
+
+                            <div class="form-group-row">
+                                <div class="form-group">
+                                    <label for="input-exchangerate-key">ExchangeRate API Key</label>
+                                    <input type="password" id="input-exchangerate-key">
+                                </div>
+                                <div class="form-group">
+                                    <label for="input-currencyfreaks-key">CurrencyFreaks API Key</label>
+                                    <input type="password" id="input-currencyfreaks-key">
+                                </div>
+                            </div>
+
+                            <div class="form-group-row">
+                                <div class="form-group">
+                                    <label for="input-cs2-provider-env">CS2 Market Provider</label>
+                                    <input type="text" id="input-cs2-provider-env" placeholder="steam_analysis">
+                                </div>
+                                <div class="form-group">
+                                    <label for="input-cs2-key">CS2 Market API Key</label>
+                                    <input type="password" id="input-cs2-key">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Global save action -->
+                        <div class="btn-save-container">
+                            <button type="submit" class="btn btn-primary" id="btn-save-settings">
+                                <svg class="icon-svg" viewBox="0 0 24 24"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>
+                                Save Configuration
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST POPUPS -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script>
+        // Global variables
+        let chartInstance = null;
+        let globalCurrency = "VND";
+
+        // Navigation
+        function switchView(viewName) {
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
+
+            if (viewName === 'dashboard') {
+                document.getElementById('tab-dashboard').classList.add('active');
+                document.getElementById('section-dashboard').classList.add('active');
+                loadNetWorthData();
+            } else if (viewName === 'settings') {
+                document.getElementById('tab-settings').classList.add('active');
+                document.getElementById('section-settings').classList.add('active');
+                loadSettingsData();
+            }
+        }
+
+        // Sidebar tabs in settings
+        function switchSettingsPanel(panelId) {
+            document.querySelectorAll('.sidebar-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.settings-panel').forEach(p => p.classList.remove('active'));
+
+            document.getElementById('btn-panel-' + panelId).classList.add('active');
+            document.getElementById('panel-' + panelId).classList.add('active');
+        }
+
+        // TOASTS
+        function showToast(title, message, type = "info") {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            
+            let icon = "ℹ️";
+            if (type === "success") icon = "✅";
+            if (type === "error") icon = "❌";
+
+            toast.innerHTML = `
+                <div class="toast-icon">${icon}</div>
+                <div class="toast-content">
+                    <span class="toast-title">${title}</span>
+                    <span class="toast-msg">${message}</span>
+                </div>
+            `;
+            container.appendChild(toast);
+            
+            // Trigger animation
+            setTimeout(() => toast.classList.add('show'), 10);
+
+            // Self destruct
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 400);
+            }, 4500);
+        }
+
+        // LOAD NET WORTH (Dashboard View)
+        async function loadNetWorthData() {
+            try {
+                const response = await fetch('/api/networth');
+                const data = await response.json();
+
+                if (!data.success) {
+                    showToast("Dashboard Error", data.error || "Failed to load net worth details.", "error");
+                    return;
+                }
+
+                globalCurrency = data.target_currency || "VND";
+                document.getElementById('currency-symbol-nw').innerText = globalCurrency;
+                document.getElementById('net-worth-amount').innerText = formatCurrencyVal(data.net_worth);
+
+                // Build Lists
+                renderCashList(data.cash);
+                renderPortfolioList(data.portfolio);
+                renderDebtList(data.debt);
+
+                // Build Chart
+                renderChart(data.cash.total, data.portfolio.total, data.debt.receivables_total, data.debt.liabilities_total);
+
+                // Audit Risk Warnings
+                auditRiskWarnings(data);
+
+                // Load activity logs
+                loadHistoryData();
+
+            } catch (err) {
+                console.error(err);
+                showToast("Network Error", "Unable to communicate with the FinanOS backend API.", "error");
+            }
+        }
+
+        function auditRiskWarnings(data) {
+            const warnings = [];
+            const targetCurrency = data.target_currency || "VND";
+            
+            // 0. Active Liabilities (Debts We Owe) - Elevate to HIGHEST CRITICAL WARNING
+            if (data.debt && data.debt.liabilities) {
+                data.debt.liabilities.forEach(l => {
+                    if (!l.is_settled) {
+                        let dueStr = "";
+                        let level = 'critical';
+                        let tag = '⚠️ CRITICAL DEBT';
+                        
+                        if (l.due_date) {
+                            const today = new Date();
+                            const due = new Date(l.due_date);
+                            const diffDays = Math.ceil((due - today) / (1000 * 60 * 60 * 24));
+                            
+                            if (diffDays < 0) {
+                                dueStr = ` - <strong style="color: var(--accent-red); text-transform: uppercase;">OVERDUE BY ${Math.abs(diffDays)} DAYS (Due: ${l.due_date})</strong>`;
+                                level = 'critical';
+                                tag = '🚨 OVERDUE DEBT';
+                            } else if (diffDays <= 7) {
+                                dueStr = ` - <strong style="color: var(--accent-orange);">DUE IN ${diffDays} DAYS (Due: ${l.due_date})</strong>`;
+                                level = 'critical';
+                                tag = '⚠️ URGENT DEBT';
+                            } else {
+                                dueStr = ` (Due: ${l.due_date})`;
+                            }
+                        }
+                        
+                        let interestStr = "";
+                        if (l.interest_rate > 0) {
+                            interestStr = ` at <strong>${l.interest_rate}% APR</strong>`;
+                        }
+                        
+                        warnings.push({
+                            level: level,
+                            tag: tag,
+                            text: `<strong>OUTSTANDING LIABILITY</strong>: You owe <strong>${l.name}</strong> a total of <code style="color: var(--accent-red); font-weight: 700;">${l.balance.toLocaleString()} ${l.currency}</code>${interestStr}${dueStr}! Please settle this debt with highest priority.`
+                        });
+                    }
+                });
+            }
+            
+            // 1. Check individual cash accounts with negative balance
+            if (data.cash && data.cash.accounts) {
+                data.cash.accounts.forEach(acc => {
+                    const bal = parseFloat(acc.balance);
+                    if (bal < 0) {
+                        warnings.push({
+                            level: 'critical',
+                            tag: 'CRITICAL',
+                            text: `The account <strong>${acc.name}</strong> has a negative balance: <code style="color: var(--accent-red);">${bal.toLocaleString()} ${acc.currency}</code>! This requires immediate cash placement.`
+                        });
+                    }
+                });
+            }
+            
+            // 2. Check low liquid cash threshold
+            const cashTotal = data.cash ? data.cash.total : 0;
+            if (cashTotal < 5000000.0) {
+                warnings.push({
+                    level: 'high',
+                    tag: 'HIGH RISK',
+                    text: `<strong>Low Liquidity Reserve</strong>: Your total liquid cash reserve (<code>${cashTotal.toLocaleString()} ${targetCurrency}</code>) is below the standard backup threshold of 5,000,000 VND!`
+                });
+            }
+            
+            // 3. Debt-to-Asset Leverage Ratio
+            const assetTotal = data.portfolio ? data.portfolio.total : 0;
+            const debtTotal = data.debt ? data.debt.liabilities_total : 0;
+            const netWorth = data.net_worth;
+            
+            if (debtTotal > 0) {
+                const totalWealth = cashTotal + assetTotal;
+                if (totalWealth > 0) {
+                    const ratio = debtTotal / totalWealth;
+                    if (ratio > 0.50) {
+                        warnings.push({
+                            level: 'high',
+                            tag: 'HIGH RISK',
+                            text: `<strong>High Debt Leverage</strong>: Your outstanding liabilities represent <strong>${(ratio * 100).toFixed(1)}%</strong> of your total holdings (Cash & Portfolio Assets combined). Paying down debt is highly recommended.`
+                        });
+                    }
+                }
+                
+                // 4. Debt Cover Ratio
+                if (cashTotal > 0) {
+                    const cover = cashTotal / debtTotal;
+                    if (cover < 0.20) {
+                        warnings.push({
+                            level: 'high',
+                            tag: 'HIGH RISK',
+                            text: `<strong>Low Debt Cover</strong>: Your liquid cash reserve covers only <strong>${(cover * 100).toFixed(1)}%</strong> of your outstanding debts! Highly vulnerable emergency state.`
+                        });
+                    }
+                } else {
+                    warnings.push({
+                        level: 'critical',
+                        tag: 'CRITICAL',
+                        text: `<strong>Critical Debt Risk</strong>: You have zero liquid cash to cover your outstanding liabilities! Any debt call will cause default.`
+                    });
+                }
+            }
+            
+            // 5. Individual underperforming asset holdings (P&L drop <= -15%)
+            if (data.portfolio && data.portfolio.holdings) {
+                data.portfolio.holdings.forEach(h => {
+                    const pnlPct = h.pnl_pct || 0;
+                    if (pnlPct <= -15.0) {
+                        warnings.push({
+                            level: 'warning',
+                            tag: 'WARNING',
+                            text: `<strong>Asset Downturn</strong>: <strong>${h.symbol.toUpperCase()}</strong> is down <strong>${pnlPct.toFixed(1)}%</strong> from your initial cost benchmark!`
+                        });
+                    }
+                });
+            }
+            
+            // 6. Overall Insolvency
+            if (netWorth < 0) {
+                warnings.push({
+                    level: 'critical',
+                    tag: 'CRITICAL',
+                    text: `<strong>Critical Insolvency State</strong>: Your total liabilities exceed your entire wealth, cash, and assets combined! Net Worth is negative.`
+                });
+            }
+            
+            const banner = document.getElementById('warnings-banner');
+            const list = document.getElementById('warnings-text');
+            
+            if (warnings.length > 0) {
+                // Sort critical first, then high, then warning
+                const levelPriority = { 'critical': 3, 'high': 2, 'warning': 1 };
+                warnings.sort((a, b) => levelPriority[b.level] - levelPriority[a.level]);
+                
+                // Map to beautiful priority list items
+                list.innerHTML = warnings.map(w => {
+                    let badgeColor = '#e67e80'; // critical (Everforest red)
+                    let badgeBg = 'rgba(230, 126, 128, 0.15)';
+                    if (w.level === 'high') {
+                        badgeColor = '#e69875'; // Everforest peach/orange
+                        badgeBg = 'rgba(230, 152, 117, 0.15)';
+                    } else if (w.level === 'warning') {
+                        badgeColor = '#dbbc7f'; // Everforest yellow
+                        badgeBg = 'rgba(219, 188, 127, 0.15)';
+                    }
+                    
+                    return `
+                        <li style="margin-bottom: 12px; display: flex; align-items: flex-start; gap: 10px; background: rgba(0,0,0,0.15); padding: 10px 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.03); list-style-type: none;">
+                            <span style="font-size: 0.72rem; font-weight: 800; color: ${badgeColor}; background: ${badgeBg}; padding: 3px 8px; border-radius: 6px; letter-spacing: 0.5px; border: 1px solid ${badgeColor}30; white-space: nowrap; margin-top: 1px;">
+                                ${w.tag}
+                            </span>
+                            <span style="color: var(--text-primary); font-size: 0.88rem; line-height: 1.4; text-align: left;">${w.text}</span>
+                        </li>
+                    `;
+                }).join('');
+                banner.style.display = 'flex';
+            } else {
+                banner.style.display = 'none';
+            }
+        }
+
+        async function loadHistoryData() {
+            try {
+                const response = await fetch('/api/activity');
+                const data = await response.json();
+                
+                const historyList = document.getElementById('history-list');
+                historyList.innerHTML = '';
+                
+                if (!data.success || data.activities.length === 0) {
+                    historyList.innerHTML = `
+                        <tr>
+                            <td colspan="4" class="empty-state" style="text-align: center; padding: 2rem;">
+                                No recent financial activities logged. Start using your Telegram Bot to log events!
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                data.activities.forEach(act => {
+                    // Format timestamp as: h:MM AM/PM on DD/MM/YYYY
+                    const dateObj = new Date(act.created_at);
+                    let hours = dateObj.getHours();
+                    const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+                    const ampm = hours >= 12 ? 'PM' : 'AM';
+                    hours = hours % 12;
+                    hours = hours ? hours : 12; // hour '0' should be '12'
+                    const timeStr = `${hours}:${minutes} ${ampm}`;
+                    const dateStr = `${String(dateObj.getDate()).padStart(2, '0')}/${String(dateObj.getMonth() + 1).padStart(2, '0')}/${dateObj.getFullYear()}`;
+                    const formattedTime = `${timeStr} on ${dateStr}`;
+                    
+                    // Format type badge
+                    let badgeColor = 'rgba(255, 255, 255, 0.08)';
+                    let textColor = '#ffffff';
+                    const type = act.activity_type.toLowerCase();
+                    if (type === 'buy') { badgeColor = 'rgba(59, 130, 246, 0.15)'; textColor = '#60a5fa'; }
+                    else if (type === 'sell') { badgeColor = 'rgba(245, 158, 11, 0.15)'; textColor = '#f59e0b'; }
+                    else if (type === 'deposit') { badgeColor = 'rgba(16, 185, 129, 0.15)'; textColor = '#10b981'; }
+                    else if (type === 'debt') { badgeColor = 'rgba(239, 68, 68, 0.15)'; textColor = '#ef4444'; }
+                    else if (type === 'borrower') { badgeColor = 'rgba(6, 182, 212, 0.15)'; textColor = '#06b6d4'; }
+                    else if (type === 'natural_purchase') { badgeColor = 'rgba(139, 92, 246, 0.15)'; textColor = '#a78bfa'; }
+                    
+                    // Determine amount formatting based on activity type
+                    let amountColor = act.amount != null ? '#ffffff' : 'var(--text-muted)';
+                    let finalAmountText = '-';
+                    
+                    if (act.amount != null) {
+                        const val = formatCurrencyVal(act.amount);
+                        if (type === 'deposit' || type === 'sell' || type === 'borrower') {
+                            amountColor = '#10b981'; // Green
+                            finalAmountText = `+${val} VND`;
+                        } else if (type === 'buy' || type === 'natural_purchase' || type === 'debt') {
+                            amountColor = '#ef4444'; // Red
+                            finalAmountText = `-${val} VND`;
+                        } else if (type === 'transfer') {
+                            amountColor = '#ffffff'; // White
+                            finalAmountText = `${val} VND`;
+                        } else {
+                            finalAmountText = `${val} VND`;
+                        }
+                    }
+
+                    const tr = document.createElement('tr');
+                    tr.style.borderBottom = '1px solid rgba(255, 255, 255, 0.03)';
+                    tr.style.fontSize = '0.9rem';
+                    tr.innerHTML = `
+                        <td style="padding: 12px 15px; color: var(--text-muted); font-size: 0.82rem;">${formattedTime}</td>
+                        <td style="padding: 12px 15px;">
+                            <span style="background: ${badgeColor}; color: ${textColor}; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
+                                ${act.activity_type.replace('_', ' ')}
+                            </span>
+                        </td>
+                        <td style="padding: 12px 15px; color: var(--text-secondary); font-weight: 500;">${act.description}</td>
+                        <td style="padding: 12px 15px; text-align: right; font-weight: 700; color: ${amountColor};">
+                            ${finalAmountText}
+                        </td>
+                    `;
+                    historyList.appendChild(tr);
+                });
+            } catch (err) {
+                console.error("Error loading activity history logs:", err);
+            }
+        }
+
+
+        function formatCurrencyVal(val) {
+            return Number(val).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function renderCashList(cashObj) {
+            document.getElementById('cash-summary').innerText = `${formatCurrencyVal(cashObj.total)} ${globalCurrency}`;
+            const listEl = document.getElementById('cash-list');
+            listEl.innerHTML = '';
+
+            if (cashObj.accounts.length === 0) {
+                listEl.innerHTML = '<div class="empty-state">No cash/bank accounts tracked.</div>';
+                return;
+            }
+
+            cashObj.accounts.forEach(acc => {
+                const li = document.createElement('li');
+                li.className = 'list-item';
+                li.innerHTML = `
+                    <div class="item-info">
+                        <span class="item-name">${acc.name}</span>
+                        <span class="item-subtext">Cash Account</span>
+                    </div>
+                    <div class="item-values">
+                        <span class="item-amount">${formatCurrencyVal(acc.balance)} ${acc.currency}</span>
+                        ${acc.currency !== globalCurrency ? `<span class="item-converted">≈ ${formatCurrencyVal(acc.balance_converted)} ${globalCurrency}</span>` : ''}
+                    </div>
+                `;
+                listEl.appendChild(li);
+            });
+        }
+
+        function renderPortfolioList(portObj) {
+            document.getElementById('portfolio-summary').innerText = `${formatCurrencyVal(portObj.total)} ${globalCurrency}`;
+            const listEl = document.getElementById('portfolio-list');
+            listEl.innerHTML = '';
+
+            if (portObj.holdings.length === 0) {
+                listEl.innerHTML = '<div class="empty-state">No holdings recorded in your portfolio.</div>';
+                return;
+            }
+
+            portObj.holdings.forEach(h => {
+                const liveVal = h.live_value_converted;
+                const costVal = h.total_spent_converted;
+                const pnlVal = liveVal - costVal;
+                const pnlPct = costVal > 0 ? (pnlVal / costVal * 100) : 0;
+                
+                const pnlColor = pnlVal >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+                const pnlSign = pnlVal >= 0 ? '+' : '';
+
+                const li = document.createElement('li');
+                li.className = 'list-item';
+                li.style.flexDirection = 'column';
+                li.style.alignItems = 'stretch';
+                li.style.gap = '8px';
+                
+                li.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        <div class="item-info">
+                            <span class="item-name" style="font-size: 1.05rem; font-weight: 700;">${h.symbol}</span>
+                            <span class="item-subtext" style="text-transform: uppercase; font-size: 0.72rem; color: var(--accent-purple); font-weight: 600; letter-spacing: 0.5px;">${h.asset_type}</span>
+                        </div>
+                        <div class="item-values" style="text-align: right; align-items: flex-end;">
+                            <span class="item-amount" style="color: #ffffff; font-size: 1.05rem; font-family: var(--font-title); font-weight: 700;">${formatCurrencyVal(liveVal)} ${globalCurrency}</span>
+                            <span class="item-converted" style="font-size: 0.75rem; color: var(--text-muted);">Cost: ${formatCurrencyVal(costVal)} ${globalCurrency}</span>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 6px; font-size: 0.8rem; width: 100%;">
+                        <span style="color: var(--text-secondary);">Qty: <strong style="color: #ffffff;">${h.quantity}</strong></span>
+                        <span style="color: var(--text-secondary);">Price: <strong style="color: #ffffff;">$${formatCurrencyVal(h.live_price_usd)}</strong></span>
+                        <span style="color: ${pnlColor}; font-weight: 700; background: ${pnlVal >= 0 ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)'}; padding: 2px 8px; border-radius: 6px; border: 1px solid ${pnlVal >= 0 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)'}; font-family: var(--font-title);">
+                            ${pnlSign}${pnlPct.toFixed(1)}%
+                        </span>
+                    </div>
+                `;
+                listEl.appendChild(li);
+            });
+        }
+
+        function renderDebtList(debtObj) {
+            const netDebt = debtObj.receivables_total - debtObj.liabilities_total;
+            const sign = netDebt >= 0 ? "+" : "";
+            document.getElementById('debt-summary').innerText = `Net: ${sign}${formatCurrencyVal(netDebt)} ${globalCurrency}`;
+
+            // Receivables List
+            const recEl = document.getElementById('receivables-list');
+            recEl.innerHTML = '';
+            if (debtObj.receivables.length === 0) {
+                recEl.innerHTML = '<div class="empty-state">No receivables tracked.</div>';
+            } else {
+                // Sort: active first, then settled
+                debtObj.receivables.sort((a, b) => a.is_settled - b.is_settled);
+                debtObj.receivables.forEach(r => {
+                    const li = document.createElement('li');
+                    li.className = 'list-item';
+                    li.style.flexDirection = 'column';
+                    li.style.alignItems = 'stretch';
+                    li.style.gap = '12px';
+                    li.style.padding = '15px';
+                    if (r.is_settled) {
+                        li.style.opacity = '0.55';
+                    }
+                    
+                    let dueBadge = `<span style="color: var(--text-muted); font-size: 0.78rem;">No due date</span>`;
+                    if (r.due_date) {
+                        const today = new Date();
+                        const due = new Date(r.due_date);
+                        const diffDays = Math.ceil((due - today) / (1000 * 60 * 60 * 24));
+                        if (r.is_settled) {
+                            dueBadge = `<span style="color: var(--text-muted); font-size: 0.78rem;">Due was: ${r.due_date}</span>`;
+                        } else if (diffDays < 0) {
+                            dueBadge = `<span style="background: rgba(230,126,128,0.15); color: var(--accent-red); padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 0.75rem;">OVERDUE BY ${Math.abs(diffDays)} DAYS</span>`;
+                        } else {
+                            dueBadge = `<span style="background: rgba(167,192,128,0.15); color: var(--accent-green); padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 0.75rem;">DUE IN ${diffDays} DAYS</span>`;
+                        }
+                    }
+                    
+                    const statusBadge = r.is_settled 
+                        ? `<span style="background: rgba(167, 192, 128, 0.2); color: var(--accent-green); padding: 3px 8px; border-radius: 6px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase;">Paid & Settled ✓</span>`
+                        : `<span style="background: rgba(127, 187, 179, 0.2); color: var(--accent-blue); padding: 3px 8px; border-radius: 6px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase;">Active Loan</span>`;
+
+                    const interestStr = r.interest_rate > 0 ? `<span style="color: var(--accent-cyan); font-size: 0.78rem; font-weight: 600;">${r.interest_rate}% APR</span>` : '';
+
+                    li.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div class="item-info">
+                                <span class="item-name" style="font-size: 1.1rem; font-weight: 700; color: #ffffff;">${r.name}</span>
+                                <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px; flex-wrap: wrap;">
+                                    ${statusBadge}
+                                    ${dueBadge}
+                                    ${interestStr}
+                                </div>
+                            </div>
+                            <div class="item-values" style="text-align: right; align-items: flex-end;">
+                                <span class="item-amount" style="font-size: 1.15rem; color: var(--accent-green); font-family: var(--font-title); font-weight: 700;">${formatCurrencyVal(r.balance)} ${r.currency}</span>
+                                ${r.currency !== globalCurrency ? `<span class="item-converted" style="font-size: 0.78rem; color: var(--text-muted);">≈ ${formatCurrencyVal(r.balance_converted)} ${globalCurrency}</span>` : ''}
+                            </div>
+                        </div>
+                        <div style="background: rgba(0,0,0,0.25); padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.02); display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-top: 4px;">
+                            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                                <label style="font-size: 0.78rem; color: var(--text-secondary); font-weight: 500;">Interest %:
+                                    <input type="number" step="0.1" value="${r.interest_rate}" id="rate-${r.name}" style="width: 55px; background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border); border-radius: 4px; padding: 2px 5px; color: #ffffff; text-align: center; margin-left: 4px; font-size: 0.78rem;">
+                                </label>
+                                <label style="font-size: 0.78rem; color: var(--text-secondary); font-weight: 500;">Due:
+                                    <input type="date" value="${r.due_date || ''}" id="due-${r.name}" style="background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border); border-radius: 4px; padding: 2px 5px; color: #ffffff; margin-left: 4px; font-size: 0.78rem;">
+                                </label>
+                            </div>
+                            <button class="btn" style="padding: 4px 10px; font-size: 0.75rem; background: var(--accent-green); color: #2b3339; border-radius: 6px; font-weight: 700;" onclick="saveDebtTerms('${r.name}')">Save</button>
+                        </div>
+                    `;
+                    recEl.appendChild(li);
+                });
+            }
+
+            // Liabilities List
+            const liabEl = document.getElementById('liabilities-list');
+            liabEl.innerHTML = '';
+            if (debtObj.liabilities.length === 0) {
+                liabEl.innerHTML = '<div class="empty-state">No liabilities tracked.</div>';
+            } else {
+                // Sort: active first, then settled
+                debtObj.liabilities.sort((a, b) => a.is_settled - b.is_settled);
+                debtObj.liabilities.forEach(l => {
+                    const li = document.createElement('li');
+                    li.className = 'list-item';
+                    li.style.flexDirection = 'column';
+                    li.style.alignItems = 'stretch';
+                    li.style.gap = '12px';
+                    li.style.padding = '15px';
+                    if (l.is_settled) {
+                        li.style.opacity = '0.55';
+                    }
+                    
+                    let dueBadge = `<span style="color: var(--text-muted); font-size: 0.78rem;">No due date</span>`;
+                    if (l.due_date) {
+                        const MathCeilDays = Math.ceil((new Date(l.due_date) - new Date()) / (1000 * 60 * 60 * 24));
+                        if (l.is_settled) {
+                            dueBadge = `<span style="color: var(--text-muted); font-size: 0.78rem;">Due was: ${l.due_date}</span>`;
+                        } else if (MathCeilDays < 0) {
+                            dueBadge = `<span style="background: rgba(230,126,128,0.15); color: var(--accent-red); padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 0.75rem;">OVERDUE BY ${Math.abs(MathCeilDays)} DAYS</span>`;
+                        } else {
+                            dueBadge = `<span style="background: rgba(230,152,117,0.15); color: var(--accent-orange); padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 0.75rem;">DUE IN ${MathCeilDays} DAYS</span>`;
+                        }
+                    }
+                    
+                    const statusBadge = l.is_settled 
+                        ? `<span style="background: rgba(167, 192, 128, 0.2); color: var(--accent-green); padding: 3px 8px; border-radius: 6px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase;">Paid & Settled ✓</span>`
+                        : `<span style="background: rgba(230, 126, 128, 0.2); color: var(--accent-red); padding: 3px 8px; border-radius: 6px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase;">Active Debt</span>`;
+
+                    const interestStr = l.interest_rate > 0 ? `<span style="color: var(--accent-cyan); font-size: 0.78rem; font-weight: 600;">${l.interest_rate}% APR</span>` : '';
+
+                    li.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div class="item-info">
+                                <span class="item-name" style="font-size: 1.1rem; font-weight: 700; color: #ffffff;">${l.name}</span>
+                                <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px; flex-wrap: wrap;">
+                                    ${statusBadge}
+                                    ${dueBadge}
+                                    ${interestStr}
+                                </div>
+                            </div>
+                            <div class="item-values" style="text-align: right; align-items: flex-end;">
+                                <span class="item-amount" style="font-size: 1.15rem; color: var(--accent-red); font-family: var(--font-title); font-weight: 700;">${formatCurrencyVal(l.balance)} ${l.currency}</span>
+                                ${l.currency !== globalCurrency ? `<span class="item-converted" style="font-size: 0.78rem; color: var(--text-muted);">≈ ${formatCurrencyVal(l.balance_converted)} ${globalCurrency}</span>` : ''}
+                            </div>
+                        </div>
+                        <div style="background: rgba(0,0,0,0.25); padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.02); display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-top: 4px;">
+                            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                                <label style="font-size: 0.78rem; color: var(--text-secondary); font-weight: 500;">Interest %:
+                                    <input type="number" step="0.1" value="${l.interest_rate}" id="rate-${l.name}" style="width: 55px; background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border); border-radius: 4px; padding: 2px 5px; color: #ffffff; text-align: center; margin-left: 4px; font-size: 0.78rem;">
+                                </label>
+                                <label style="font-size: 0.78rem; color: var(--text-secondary); font-weight: 500;">Due:
+                                    <input type="date" value="${l.due_date || ''}" id="due-${l.name}" style="background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border); border-radius: 4px; padding: 2px 5px; color: #ffffff; margin-left: 4px; font-size: 0.78rem;">
+                                </label>
+                            </div>
+                            <button class="btn" style="padding: 4px 10px; font-size: 0.75rem; background: var(--accent-red); color: #ffffff; border-radius: 6px; font-weight: 700;" onclick="saveDebtTerms('${l.name}')">Save</button>
+                        </div>
+                    `;
+                    liabEl.appendChild(li);
+                });
+            }
+        }
+
+        async function saveDebtTerms(personName) {
+            const interestRate = parseFloat(document.getElementById('rate-' + personName).value) || 0.0;
+            const dueDate = document.getElementById('due-' + personName).value || null;
+            
+            try {
+                const response = await fetch('/api/debts/update', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        person_name: personName,
+                        interest_rate: interestRate,
+                        due_date: dueDate
+                    })
+                });
+                const res = await response.json();
+                if (res.success) {
+                    showToast("Terms Updated", `Successfully saved terms for ${personName}!`, "success");
+                    loadNetWorthData(); // reload dashboard
+                } else {
+                    showToast("Error", res.error || "Failed to update debt terms.", "error");
+                }
+            } catch (err) {
+                console.error(err);
+                showToast("Network Error", "Unable to save terms to backend.", "error");
+            }
+        }
+
+        // ALLOCATION CHART.JS
+        function renderChart(cash, assets, receivables, liabilities) {
+            const ctx = document.getElementById('allocation-chart').getContext('2d');
+            
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            const total = cash + assets + receivables + liabilities;
+            if (total === 0) return;
+
+            chartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Cash', 'Holdings', 'Receivables', 'Liabilities'],
+                    datasets: [{
+                        data: [cash, assets, receivables, liabilities],
+                        backgroundColor: [
+                            '#7fbbb3', // Everforest blue (Cash)
+                            '#d699b6', // Everforest purple (Holdings)
+                            '#a7c080', // Everforest green (Receivables)
+                            '#e67e80'  // Everforest red (Liabilities)
+                        ],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const val = context.raw;
+                                    const pct = ((val / total) * 100).toFixed(1);
+                                    return ` ${context.label}: ${pct}% (${formatCurrencyVal(val)} ${globalCurrency})`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '70%'
+                }
+            });
+        }
+
+
+        // LOAD SETTINGS (Settings View)
+        async function loadSettingsData() {
+            try {
+                const response = await fetch('/api/settings');
+                const data = await response.json();
+
+                if (!data.success) {
+                    showToast("Settings Error", "Could not fetch configuration from server.", "error");
+                    return;
+                }
+
+                // Core & Preferences Map
+                document.getElementById('input-default-currency').value = data.config.DEFAULT_CURRENCY;
+                document.getElementById('input-app-env').value = data.config.APP_ENV;
+                document.getElementById('input-database-url').value = data.config.DATABASE_URL;
+
+                // Firefly III Connection
+                document.getElementById('input-firefly-url').value = data.config.FIREFLY_BASE_URL;
+                document.getElementById('input-firefly-token').value = data.config.FIREFLY_TOKEN;
+
+                // Telegram
+                document.getElementById('input-telegram-token').value = data.config.TELEGRAM_BOT_TOKEN;
+
+                // Gemini
+                document.getElementById('input-gemini-key').value = data.config.GEMINI_API_KEY;
+
+                // Market selections
+                document.getElementById('select-crypto-provider').value = data.preferences.preferred_crypto_provider;
+                document.getElementById('select-stock-provider').value = data.preferences.preferred_stock_provider;
+                document.getElementById('select-forex-provider').value = data.preferences.preferred_forex_provider;
+                document.getElementById('select-cs2-provider').value = data.preferences.preferred_cs2_provider;
+
+                // Key values
+                document.getElementById('input-coingecko-key').value = data.config.COINGECKO_API_KEY;
+                document.getElementById('input-coinmarketcap-key').value = data.config.COINMARKETCAP_API_KEY;
+                document.getElementById('input-finnhub-key').value = data.config.FINNHUB_API_KEY;
+                document.getElementById('input-alphavantage-key').value = data.config.ALPHAVANTAGE_API_KEY;
+                document.getElementById('input-exchangerate-key').value = data.config.EXCHANGERATE_API_KEY;
+                document.getElementById('input-currencyfreaks-key').value = data.config.CURRENCYFREAKS_API_KEY;
+                document.getElementById('input-cs2-provider-env').value = data.config.CS2_MARKET_PROVIDER;
+                document.getElementById('input-cs2-key').value = data.config.CS2_MARKET_API_KEY;
+
+                showToast("Settings Loaded", "Latest configurations loaded from server.", "success");
+
+            } catch (err) {
+                console.error(err);
+                showToast("Network Error", "Unable to load settings from server backend.", "error");
+            }
+        }
+
+        // SAVE ALL SETTINGS
+        async function saveSettings() {
+            const saveBtn = document.getElementById('btn-save-settings');
+            saveBtn.classList.add('btn-loading');
+
+            const payload = {
+                config: {
+                    DEFAULT_CURRENCY: document.getElementById('input-default-currency').value,
+                    APP_ENV: document.getElementById('input-app-env').value,
+                    DATABASE_URL: document.getElementById('input-database-url').value,
+                    FIREFLY_BASE_URL: document.getElementById('input-firefly-url').value,
+                    FIREFLY_TOKEN: document.getElementById('input-firefly-token').value,
+                    TELEGRAM_BOT_TOKEN: document.getElementById('input-telegram-token').value,
+                    GEMINI_API_KEY: document.getElementById('input-gemini-key').value,
+                    COINGECKO_API_KEY: document.getElementById('input-coingecko-key').value,
+                    COINMARKETCAP_API_KEY: document.getElementById('input-coinmarketcap-key').value,
+                    FINNHUB_API_KEY: document.getElementById('input-finnhub-key').value,
+                    ALPHAVANTAGE_API_KEY: document.getElementById('input-alphavantage-key').value,
+                    EXCHANGERATE_API_KEY: document.getElementById('input-exchangerate-key').value,
+                    CURRENCYFREAKS_API_KEY: document.getElementById('input-currencyfreaks-key').value,
+                    CS2_MARKET_PROVIDER: document.getElementById('input-cs2-provider-env').value,
+                    CS2_MARKET_API_KEY: document.getElementById('input-cs2-key').value
+                },
+                preferences: {
+                    preferred_crypto_provider: document.getElementById('select-crypto-provider').value,
+                    preferred_stock_provider: document.getElementById('select-stock-provider').value,
+                    preferred_forex_provider: document.getElementById('select-forex-provider').value,
+                    preferred_cs2_provider: document.getElementById('select-cs2-provider').value
+                }
+            };
+
+            try {
+                const response = await fetch('/api/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+                if (response.ok && data.success) {
+                    showToast("Configuration Saved", "Settings successfully written to .env and loaded in-memory!", "success");
+                } else {
+                    showToast("Save Failed", data.detail || "Server rejected settings updates.", "error");
+                }
+            } catch (err) {
+                console.error(err);
+                showToast("Network Error", "Failed to write updates to the backend.", "error");
+            } finally {
+                saveBtn.classList.remove('btn-loading');
+            }
+        }
+
+        // CONNECTION TESTS
+        async function testFireflyConnection() {
+            const btn = document.getElementById('btn-test-firefly');
+            btn.classList.add('btn-loading');
+            
+            const payload = {
+                base_url: document.getElementById('input-firefly-url').value,
+                token: document.getElementById('input-firefly-token').value
+            };
+
+            try {
+                const res = await fetch('/api/test/firefly', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    showToast("Firefly III Success", data.message, "success");
+                } else {
+                    showToast("Firefly III Failed", data.message, "error");
+                }
+            } catch (err) {
+                showToast("Connection Error", "Firefly III testing endpoint timed out or failed.", "error");
+            } finally {
+                btn.classList.remove('btn-loading');
+            }
+        }
+
+        async function testTelegramConnection() {
+            const btn = document.getElementById('btn-test-telegram');
+            btn.classList.add('btn-loading');
+
+            const payload = {
+                token: document.getElementById('input-telegram-token').value
+            };
+
+            try {
+                const res = await fetch('/api/test/telegram', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    showToast("Telegram Bot Success", data.message, "success");
+                } else {
+                    showToast("Telegram Bot Failed", data.message, "error");
+                }
+            } catch (err) {
+                showToast("Connection Error", "Telegram bot verification failed.", "error");
+            } finally {
+                btn.classList.remove('btn-loading');
+            }
+        }
+
+        async function testGeminiConnection() {
+            const btn = document.getElementById('btn-test-gemini');
+            btn.classList.add('btn-loading');
+
+            const payload = {
+                api_key: document.getElementById('input-gemini-key').value
+            };
+
+            try {
+                const res = await fetch('/api/test/gemini', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    showToast("Gemini API Success", data.message, "success");
+                } else {
+                    showToast("Gemini API Failed", data.message, "error");
+                }
+            } catch (err) {
+                showToast("Connection Error", "Gemini testing endpoint failed.", "error");
+            } finally {
+                btn.classList.remove('btn-loading');
+            }
+        }
+
+        // Initial Load on boot
+        window.onload = () => {
+            loadNetWorthData();
+        };
+    </script>
+</body>
+</html>

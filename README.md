@@ -1,16 +1,122 @@
-Overall structure and what do they use:
+Overall structure of the project
 
 ```
-assets/
-  parser.py
-  validator.py
-  resolver.py
-  service.py
-  storage.py
-  models.py
+finanos/
+  README.md
+  .env
+  .env.example
+  requirements.txt
+  server.py
+
+  app/
+    __init__.py
+    config.py
+    bootstrap.py
+
+    core/
+      router.py
+      intents.py
+      commands.py
+      responses.py
+      exceptions.py
+
+    interfaces/
+      telegram/
+        bot.py
+        handlers.py
+        formatters.py
+
+      web/
+        routes.py
+        dashboard.py
+        templates/
+        static/
+
+      cli/
+        listener.py
+
+    modules/
+      assets/
+        models.py
+        parser.py
+        service.py
+        portfolio.py
+        pricing.py
+        storage.py
+
+      transactions/
+        models.py
+        parser.py
+        service.py
+        history.py
+        reports.py
+
+      debt/
+        models.py
+        parser.py
+        service.py
+        reminders.py
+        interest.py
+
+      market/
+        crypto.py
+        stocks.py
+        forex.py
+        cs2.py
+        service.py
+
+    integrations/
+      firefly/
+        client.py
+        mapper.py
+
+      telegram/
+        client.py
+
+      crypto/
+        coingecko.py
+        coinmarketcap.py
+
+      stocks/
+        finnhub.py
+        alphavantage.py
+
+      forex/
+        exchangerate_api.py
+        currencyfreaks.py
+
+      cs2/
+        price_provider.py
+        steam_market.py
+
+    storage/
+      database.py
+      migrations/
+      repositories/
+        asset_repo.py
+        transaction_repo.py
+        debt_repo.py
+        settings_repo.py
+
+    settings/
+      models.py
+      service.py
+      defaults.py
+
+    scheduler/
+      jobs.py
+      alerts.py
+      reports.py
+      README.md
+
+    utils/
+      money.py
+      text.py
+      dates.py
+      logging.py
 ```
 
-## Assets tracking features !
+## Assets tracking features
 
 - User type in what they buy, amount.
 
@@ -20,206 +126,610 @@ assets/
 
     Query for possible names and reask the user
 
-- - Calculate the money spent. Save the assets and symbol !
+### Docstrings for each files
 
-### doctrings:
-
-```python
-class AssetInput:
+```text
+finanos/
+  README.md
     """
-    Represents a partially parsed user input.
+    Project overview.
 
-    This object flows through the pipeline (parse → validate → resolve → process).
-    It does not guarantee completeness.
-
-    Attributes:
-        raw_text   : Original user message
-        name       : Asset name as typed by the user
-        ticker     : Normalized ticker symbol (if resolved)
-        amount     : Total money spent (user input)
-        quantity   : Number of units purchased
+    Explains what FinanOS does, how to set it up, which APIs are required,
+    and how the local server, Telegram bot, Firefly III, and market APIs work
+    together.
     """
 
-def parse_message(text: str) -> AssetInput:
+  .env
     """
-    Extract basic fields from user input.
+    Local runtime secrets.
 
-    This step is intentionally loose — it only pulls out obvious values:
-        - numbers (amount / quantity)
-        - potential asset name
-
-    No validation or correction happens here.
-
-
-    Example:
-        "buy 2 btc 1000"
-        → quantity=2, name="btc", amount=1000
-
-    Returns:
-        AssetInput (possibly incomplete)
+    Stores API keys, bot tokens, database URL, and user-specific configuration.
+    This file must stay private and should not be committed.
     """
 
-  def require_amount(asset: AssetInput) -> str | None:
+  .env.example
     """
-    Ensure the user provided a total amount.
+    Environment template.
 
-    Returns:
-        None if valid
-        A prompt message if missing
-    """
-
-
-def require_asset_name(asset: AssetInput) -> str | None:
-    """
-    Ensure the user specified what asset they are buying.
-
-    Returns:
-        None if valid
-        A prompt message if missing
+    Lists all required variables so the user knows what they need to configure
+    before running the project.
     """
 
-
-def require_ticker(asset: AssetInput) -> str | None:
+  requirements.txt
     """
-    Ensure a ticker has been resolved.
+    Python dependency list.
 
-    This function does NOT resolve it — only checks presence.
-
-    Returns:
-        None if valid
-        A prompt message if missing
+    Keeps all required packages in one place for quick installation.
     """
 
-  def search_ticker_candidates(query: str) -> list[str]:
+  server.py
     """
-    Look up possible ticker symbols for a given name.
+    Main application entry point.
 
-    This should query external APIs such as:
-        - crypto (CoinGecko)
-        - stocks (Alpha Vantage, Finnhub)
-
-    Returns:
-        A list of matching tickers (can be empty)
+    Starts the local server, loads configuration, initializes services,
+    connects the Telegram bot, and prepares the app runtime.
     """
-
-
-def resolve_ticker(asset: AssetInput) -> list[str] | None:
-    """
-    Attempt to resolve a ticker from the asset name.
-
-    Behavior:
-        - If ticker already exists → return None
-        - If no match → return []
-        - If multiple matches → return list of candidates
-
-    Used to decide whether to prompt the user again.
-    """
-
-    def calculate_spent(asset: AssetInput) -> float:
-    """
-    Compute how much money the user spent.
-
-    Rules:
-        - If amount is provided → use it directly
-        - If only quantity is provided → requires price lookup (handled elsewhere)
-
-    This function is pure logic — no API calls here.
-    """
-
-
-def enrich_with_price(asset: AssetInput) -> AssetInput:
-    """
-    Attach current price data to the asset.
-
-    This is where external APIs are used.
-
-    Used when:
-        - user provides quantity but no total amount
-
-    Returns:
-        Updated AssetInput
-    """
-
-
-def process_asset_flow(text: str) -> dict:
-    """
-    Main entry point for handling user input.
-
-    Flow:
-        1. Parse input
-        2. Validate required fields
-     3. Resolve ticker
-        4. If missing data → return prompt
-        5. If complete → calculate and save
-
-    Returns:
-        {
-            "status": "need_input" | "ok",
-            "message": str,
-            "data": optional
-        }
-    """
-
-  def save_asset(asset: AssetInput) -> None:
-    """
-    Persist the asset record.
-
-    Can be implemented using:
-        - SQLite (local storage)
-        - Firefly III (as a transaction or metadata)
-
-    No return value.
-    """
-
-
-def get_user_assets(user_id: int) -> list:
-    """
-    Retrieve stored assets for a given user.
-
-    Useful for:
-        - portfolio tracking
-        - reporting
-    """
-  def normalize_text(text: str) -> str:
-    """
-    Clean up user input.
-
-    Typical steps:
-        - lowercase
-        - trim spaces
-        - normalize formats (e.g. '50k' → '50000')
-    """
-
-
-def parse_amount_token(token: str) -> float | None:
-    """
-    Convert shorthand numbers into floats.
-
-    Examples:
-        50k → 50000
-        2m  → 2000000
-
-    Returns:
-        float or None if parsing fails
-    """
-
-
-def is_number(token: str) -> bool:
-    """
-    Check whether a token represents a numeric value.
-    """
-
-  def merge_with_session(previous: AssetInput, new_text: str) -> AssetInput:
-    """
-    Merge new user input into an existing incomplete asset.
-
-    Used for multi-step conversations:
-        User: "buy btc"
-        Bot: "how much?"
-        User: "1000"
-
-    This function combines both into a complete AssetInput.
-    """
-
-  `
 ```
+
+```text
+app/
+  __init__.py
+    """
+    Application package marker.
+
+    Allows the app directory to be imported as a Python package.
+    """
+
+  config.py
+    """
+    Runtime configuration loader.
+
+    Reads values from .env and exposes them through one central config object.
+    This includes API keys, service URLs, database paths, and default settings.
+    """
+
+  bootstrap.py
+    """
+    Application bootstrap logic.
+
+    Wires together repositories, services, integrations, and interfaces.
+    Keeps startup setup out of server.py.
+    """
+```
+
+```text
+app/core/
+  router.py
+    """
+    Central message router.
+
+    Receives normalized user input and decides which module should handle it:
+    assets, transactions, debt, or market information.
+    """
+
+  intents.py
+    """
+    Intent definitions and detection helpers.
+
+    Converts user messages into high-level actions such as BUY_ASSET,
+    SELL_ASSET, CREATE_TRANSACTION, CHECK_PRICE, or ADD_DEBT.
+    """
+
+  commands.py
+    """
+    Command mapping layer.
+
+    Connects detected intents to the correct service function.
+    Keeps command handling separate from business logic.
+    """
+
+  responses.py
+    """
+    Response builder.
+
+    Standardizes messages returned to Telegram, CLI, or web interfaces.
+    Keeps user-facing output consistent.
+    """
+
+  exceptions.py
+    """
+    Application-specific exceptions.
+
+    Defines clean error types for missing input, invalid commands,
+    failed API calls, and validation problems.
+    """
+```
+
+```text
+app/interfaces/telegram/
+  bot.py
+    """
+    Telegram bot setup.
+
+    Creates the Telegram application, registers handlers, and starts polling
+    for incoming user messages.
+    """
+
+  handlers.py
+    """
+    Telegram update handlers.
+
+    Receives raw Telegram messages, extracts user text, sends it to the core
+    router, and returns the response back to the chat.
+    """
+
+  formatters.py
+    """
+    Telegram response formatting.
+
+    Converts internal response objects into clean Telegram messages.
+    Handles plain text, markdown, lists, and error messages.
+    """
+```
+
+```text
+app/interfaces/web/
+  routes.py
+    """
+    Web route definitions.
+
+    Defines local dashboard endpoints for settings, API status, portfolio view,
+    transaction history, and debt overview.
+    """
+
+  dashboard.py
+    """
+    Dashboard view logic.
+
+    Prepares data for the local web dashboard and calls services needed by
+    the settings and overview pages.
+    """
+
+  templates/
+    """
+    HTML templates.
+
+    Stores dashboard pages rendered by the local web interface.
+    """
+
+  static/
+    """
+    Static web assets.
+
+    Stores CSS, JavaScript, images, and other frontend files used by the
+    local dashboard.
+    """
+```
+
+```text
+app/interfaces/cli/
+  listener.py
+    """
+    CLI testing interface.
+
+    Allows user messages to be typed directly in the terminal.
+    Useful for testing parser, router, and services without Telegram.
+    """
+```
+
+```text
+app/modules/assets/
+  models.py
+    """
+    Asset domain models.
+
+    Defines structures for assets, holdings, buy orders, sell orders,
+    and portfolio entries.
+    """
+
+  parser.py
+    """
+    Asset message parser.
+
+    Extracts asset-related information from user messages, such as ticker,
+    name, quantity, amount spent, and action type.
+    """
+
+  service.py
+    """
+    Asset business logic.
+
+    Handles buying, selling, holding, updating, and validating asset records.
+    This is the main service layer for portfolio actions.
+    """
+
+  portfolio.py
+    """
+    Portfolio calculation logic.
+
+    Calculates total holdings, average buy price, profit/loss, allocation,
+    and current portfolio value.
+    """
+
+  pricing.py
+    """
+    Asset price lookup layer.
+
+    Requests current market prices through the market module or external
+    integrations. Does not store assets directly.
+    """
+
+  storage.py
+    """
+    Asset persistence helpers.
+
+    Saves and retrieves asset records using the storage/repository layer.
+    """
+```
+
+```text
+app/modules/transactions/
+  models.py
+    """
+    Transaction domain models.
+
+    Defines structures for income, expense, transfers, categories,
+    and transaction records.
+    """
+
+  parser.py
+    """
+    Transaction message parser.
+
+    Extracts amount, category, note, account, and transaction type from
+    user messages.
+    """
+
+  service.py
+    """
+    Transaction business logic.
+
+    Creates, validates, updates, and syncs transactions with Firefly III.
+    """
+
+  history.py
+    """
+    Transaction history queries.
+
+    Retrieves and filters past transactions by date, category, account,
+    amount, or keyword.
+    """
+
+  reports.py
+    """
+    Transaction reporting logic.
+
+    Builds daily, weekly, monthly, and category-based summaries from
+    transaction data.
+    """
+```
+
+```text
+app/modules/debt/
+  models.py
+    """
+    Debt domain models.
+
+    Defines structures for borrowed money, lent money, repayments,
+    due dates, and interest terms.
+    """
+
+  parser.py
+    """
+    Debt message parser.
+
+    Extracts debt-related information from user messages, such as person,
+    amount, due date, direction, and interest.
+    """
+
+  service.py
+    """
+    Debt business logic.
+
+    Handles creating debt records, updating repayments, marking debts as paid,
+    and checking outstanding balances.
+    """
+
+  reminders.py
+    """
+    Debt reminder logic.
+
+    Prepares reminder data for future due dates.
+    Actual scheduling belongs to the scheduler module.
+    """
+
+  interest.py
+    """
+    Interest calculation helpers.
+
+    Calculates simple interest, repayment amount, remaining balance,
+    and overdue cost.
+    """
+```
+
+```text
+app/modules/market/
+  crypto.py
+    """
+    Crypto market service.
+
+    Provides crypto price lookup and symbol search using configured crypto
+    providers such as CoinGecko or CoinMarketCap.
+    """
+
+  stocks.py
+    """
+    Stock, ETF, and commodity market service.
+
+    Provides quote lookup and symbol search using providers such as Finnhub
+    or Alpha Vantage.
+    """
+
+  forex.py
+    """
+    Forex market service.
+
+    Provides exchange rate lookup and currency conversion using configured
+    forex providers.
+    """
+
+  cs2.py
+    """
+    CS2 market service.
+
+    Provides CS2 item price lookup and item search using configured CS2
+    market providers.
+    """
+
+  service.py
+    """
+    Unified market service.
+
+    Routes price lookup requests to the correct market type:
+    crypto, stocks, forex, or CS2.
+    """
+```
+
+```text
+app/integrations/firefly/
+  client.py
+    """
+    Firefly III API client.
+
+    Handles HTTP requests to Firefly III, including accounts, transactions,
+    categories, budgets, and summaries.
+    """
+
+  mapper.py
+    """
+    Firefly III data mapper.
+
+    Converts internal transaction and finance models into Firefly-compatible
+    request payloads.
+    """
+```
+
+```text
+app/integrations/telegram/
+  client.py
+    """
+    Telegram API client.
+
+    Low-level wrapper for Telegram API calls when direct access is needed.
+    Most bot logic should still stay inside interfaces/telegram.
+    """
+```
+
+```text
+app/integrations/crypto/
+  coingecko.py
+    """
+    CoinGecko API client.
+
+    Handles crypto price lookup, coin search, and market data requests
+    through CoinGecko.
+    """
+
+  coinmarketcap.py
+    """
+    CoinMarketCap API client.
+
+    Handles crypto quotes, symbol lookup, and market information through
+    CoinMarketCap.
+    """
+```
+
+```text
+app/integrations/stocks/
+  finnhub.py
+    """
+    Finnhub API client.
+
+    Handles stock, ETF, and market quote requests through Finnhub.
+    """
+
+  alphavantage.py
+    """
+    Alpha Vantage API client.
+
+    Handles stock, ETF, commodity, and possible forex-related requests
+    through Alpha Vantage.
+    """
+```
+
+```text
+app/integrations/forex/
+  exchangerate_api.py
+    """
+    ExchangeRate API client.
+
+    Handles exchange rate lookup and currency conversion using ExchangeRate API.
+    """
+
+  currencyfreaks.py
+    """
+    CurrencyFreaks API client.
+
+    Handles exchange rate lookup and currency conversion using CurrencyFreaks.
+    """
+```
+
+```text
+app/integrations/cs2/
+  price_provider.py
+    """
+    CS2 price provider abstraction.
+
+    Defines a common interface for CS2 market price sources so the app can
+    switch providers without changing business logic.
+    """
+
+  steam_market.py
+    """
+    Steam Market API wrapper.
+
+    Fetches CS2 item prices from Steam Community Market when available.
+    """
+```
+
+```text
+app/storage/
+  database.py
+    """
+    Database setup.
+
+    Creates the database connection and exposes helpers for sessions,
+    initialization, and schema setup.
+    """
+
+  migrations/
+    """
+    Database migrations.
+
+    Stores schema changes over time.
+    """
+
+  repositories/
+    asset_repo.py
+      """
+      Asset repository.
+
+      Handles database operations for asset records and portfolio holdings.
+      """
+
+    transaction_repo.py
+      """
+      Transaction repository.
+
+      Handles database operations for income, expense, and transaction history.
+      """
+
+    debt_repo.py
+      """
+      Debt repository.
+
+      Handles database operations for debt records, repayments, and balances.
+      """
+
+    settings_repo.py
+      """
+      Settings repository.
+
+      Stores and retrieves user configuration, API keys, provider choices,
+      and local preferences.
+      """
+```
+
+```text
+app/settings/
+  models.py
+    """
+    Settings models.
+
+    Defines structures for user preferences, API configuration,
+    provider selection, and default currency.
+    """
+
+  service.py
+    """
+    Settings service.
+
+    Reads, validates, updates, and applies user settings across the app.
+    """
+
+  defaults.py
+    """
+    Default settings.
+
+    Stores fallback values used when the user has not configured something yet.
+    """
+```
+
+```text
+app/scheduler/
+  jobs.py
+    """
+    Future feature: scheduled job registration.
+
+    Will define periodic tasks such as daily reports, price checks,
+    and reminder scans.
+    """
+
+  alerts.py
+    """
+    Future feature: alert checks.
+
+    Will handle budget alerts, asset price alerts, debt due alerts,
+    and market movement alerts.
+    """
+
+  reports.py
+    """
+    Future feature: scheduled reports.
+
+    Will generate automatic daily, weekly, or monthly summaries.
+    """
+
+  README.md
+    """
+    Scheduler feature notes.
+
+    Documents planned scheduling features and how they will work later.
+    """
+```
+
+```text
+app/utils/
+  money.py
+    """
+    Money utilities.
+
+    Handles amount parsing, currency formatting, rounding, and conversion
+    helpers used across modules.
+    """
+
+  text.py
+    """
+    Text utilities.
+
+    Handles text normalization, keyword matching, token cleanup,
+    and simple parsing helpers.
+    """
+
+  dates.py
+    """
+    Date utilities.
+
+    Handles date parsing, relative dates, month ranges, and formatting.
+    """
+
+  logging.py
+    """
+    Logging setup.
+
+    Provides consistent logging configuration for the app while avoiding
+    leaking sensitive values such as tokens or API keys.
+    """
+```
+
+# HOW TO SETUP
