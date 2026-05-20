@@ -958,15 +958,20 @@
                                 <span class="card-title">Generative AI (Google Gemini)</span>
                             </div>
                             <div class="form-group">
-                                <label for="input-gemini-key">Gemini API Key</label>
-                                <div class="input-with-action">
-                                    <input type="password" id="input-gemini-key" placeholder="AIzaSy...">
+                                <label>Gemini API Keys</label>
+                                <div id="gemini-keys-container" style="display: flex; flex-direction: column; gap: 8px;">
+                                    <!-- Inputs will be generated here -->
+                                </div>
+                                <div style="display: flex; gap: 10px; margin-top: 5px;">
+                                    <button type="button" class="btn btn-secondary" onclick="addGeminiKeyField()">
+                                        ➕ Add Alternative Key
+                                    </button>
                                     <button type="button" class="btn btn-test" id="btn-test-gemini" onclick="testGeminiConnection()">
                                         <span class="spinner"></span>
-                                        <span class="btn-text-content">Test Key</span>
+                                        <span class="btn-text-content">Test Keys</span>
                                     </button>
                                 </div>
-                                <span class="form-help">Gemini Flash key used by FinanOS to parse values, extract categories and categorize logs automatically.</span>
+                                <span class="form-help">Gemini keys used by FinanOS. Add multiple keys to automatically enable Round-Robin Load Balancing and avoid API rate limits.</span>
                             </div>
                         </div>
 
@@ -1741,7 +1746,10 @@
                 document.getElementById('input-telegram-token').value = data.config.TELEGRAM_BOT_TOKEN;
 
                 // Gemini
-                document.getElementById('input-gemini-key').value = data.config.GEMINI_API_KEY;
+                const geminiKeys = data.config.GEMINI_API_KEY ? data.config.GEMINI_API_KEY.split(',') : [''];
+                const container = document.getElementById('gemini-keys-container');
+                container.innerHTML = '';
+                geminiKeys.forEach(key => addGeminiKeyField(key.trim()));
 
                 // Market selections
                 document.getElementById('select-crypto-provider').value = data.preferences.preferred_crypto_provider;
@@ -1780,7 +1788,7 @@
                     FIREFLY_BASE_URL: document.getElementById('input-firefly-url').value,
                     FIREFLY_TOKEN: document.getElementById('input-firefly-token').value,
                     TELEGRAM_BOT_TOKEN: document.getElementById('input-telegram-token').value,
-                    GEMINI_API_KEY: document.getElementById('input-gemini-key').value,
+                    GEMINI_API_KEY: Array.from(document.querySelectorAll('.gemini-key-input')).map(input => input.value.trim()).filter(v => v).join(','),
                     COINGECKO_API_KEY: document.getElementById('input-coingecko-key').value,
                     COINMARKETCAP_API_KEY: document.getElementById('input-coinmarketcap-key').value,
                     FINNHUB_API_KEY: document.getElementById('input-finnhub-key').value,
@@ -1877,19 +1885,39 @@
             }
         }
 
+        function addGeminiKeyField(value = '') {
+            const container = document.getElementById('gemini-keys-container');
+            const row = document.createElement('div');
+            row.className = 'input-with-action';
+            
+            const input = document.createElement('input');
+            input.type = 'password';
+            input.className = 'gemini-key-input';
+            input.placeholder = 'AIzaSy...';
+            input.value = value;
+            
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'btn btn-secondary';
+            removeBtn.innerHTML = '❌';
+            removeBtn.onclick = () => row.remove();
+            
+            row.appendChild(input);
+            row.appendChild(removeBtn);
+            container.appendChild(row);
+        }
+
         async function testGeminiConnection() {
             const btn = document.getElementById('btn-test-gemini');
-            btn.classList.add('btn-loading');
-
-            const payload = {
-                api_key: document.getElementById('input-gemini-key').value
-            };
-
+            btn.classList.add('loading');
+            
+            const keys = Array.from(document.querySelectorAll('.gemini-key-input')).map(input => input.value.trim()).filter(v => v).join(',');
+            
             try {
                 const res = await fetch('/api/test/gemini', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ api_key: keys })
                 });
                 const data = await res.json();
                 
@@ -1901,7 +1929,7 @@
             } catch (err) {
                 showToast("Connection Error", "Gemini testing endpoint failed.", "error");
             } finally {
-                btn.classList.remove('btn-loading');
+                btn.classList.remove('loading');
             }
         }
 

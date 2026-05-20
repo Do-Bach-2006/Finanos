@@ -44,6 +44,27 @@ MAIN_MENU = 0
 (TRANSFER_AMOUNT, TRANSFER_SOURCE, TRANSFER_DEST) = range(70, 73)
 
 # --- ENTRY ---
+async def send_receipt_and_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE, msg: str):
+    """Sends the receipt/log message as a standalone message, then immediately triggers the main menu."""
+    chat_id = update.effective_chat.id
+    if update.callback_query:
+        await update.callback_query.edit_message_text(msg, parse_mode="Markdown")
+    else:
+        await update.message.reply_text(msg, parse_mode="Markdown")
+        
+    keyboard = [
+        [InlineKeyboardButton("Buy 📈", callback_data="flow_buy")],
+        [InlineKeyboardButton("Sell Asset 📉", callback_data="flow_sell")],
+        [InlineKeyboardButton("Deposit 💵", callback_data="flow_deposit")],
+        [InlineKeyboardButton("Transfer 🔄", callback_data="flow_transfer")],
+        [InlineKeyboardButton("Add Debt 🤝", callback_data="flow_debt_sub")],
+        [InlineKeyboardButton("View Vault 🏦", callback_data="trigger_view")]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    main_menu_msg = '🏠 *Welcome to FinanOS Personal Wealth Manager!*\n\nSelect an action from the options below:'
+    await context.bot.send_message(chat_id=chat_id, text=main_menu_msg, reply_markup=reply_markup, parse_mode="Markdown")
+    return MAIN_MENU
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Entry point of the bot."""
     keyboard = [
@@ -566,9 +587,8 @@ async def buy_cost_confirm(update: Update, context: ContextTypes.DEFAULT_TYPE):
             finally:
                 db.close()
                 
-            await query.edit_message_text(f"✅ Successfully recorded holding of {data['qty']} {data['name']} in your vault!")
-            await start(update, context)
-            return MAIN_MENU
+            msg = f"✅ Successfully recorded holding of {data['qty']} {data['name']} in your vault!"
+            return await send_receipt_and_main_menu(update, context, msg)
             
     elif choice == "cost_confirm_no":
         keyboard = [[InlineKeyboardButton("🔙 Cancel", callback_data="back_main")]]
@@ -609,9 +629,8 @@ async def buy_cost_manual(update: Update, context: ContextTypes.DEFAULT_TYPE):
         finally:
             db.close()
             
-        await update.message.reply_text(f"✅ Successfully recorded holding of {data['qty']} {data['name']} in your vault!")
-        await start(update, context)
-        return MAIN_MENU
+        msg = f"✅ Successfully recorded holding of {data['qty']} {data['name']} in your vault!"
+        return await send_receipt_and_main_menu(update, context, msg)
 
 async def buy_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -639,9 +658,8 @@ async def buy_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
         firefly_client.create_transaction(tx_payload)
         record_activity("natural_purchase", f"Bought {data['description']} via AI", data["amount"])
         
-        await query.edit_message_text(f"✅ AI Purchase recorded: {data['description']} for {data['amount']:,.2f} VND.")
-        await start(update, context)
-        return MAIN_MENU
+        msg = f"✅ AI Purchase recorded: {data['description']} for {data['amount']:,.2f} VND."
+        return await send_receipt_and_main_menu(update, context, msg)
         
     else:
         # Investment purchase save
@@ -677,9 +695,8 @@ async def buy_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
         firefly_client.create_transaction(tx_payload)
         record_activity("buy", f"Bought {data['qty']} {data['name']}", data["cost"])
         
-        await query.edit_message_text(f"✅ Successfully recorded investment purchase of {data['name']}!")
-        await start(update, context)
-        return MAIN_MENU
+        msg = f"✅ Successfully recorded investment purchase of {data['name']}!"
+        return await send_receipt_and_main_menu(update, context, msg)
 
 
 # --- FLOW 2: REAL DB-DRIVEN SELL ASSET ---
@@ -694,9 +711,8 @@ async def sell_select(update: Update, context: ContextTypes.DEFAULT_TYPE):
     db.close()
     
     if not holding:
-        await query.edit_message_text("❌ Error: Selected holding was not found.")
-        await start(update, context)
-        return MAIN_MENU
+        msg = "❌ Error: Selected holding was not found."
+        return await send_receipt_and_main_menu(update, context, msg)
         
     context.user_data['flow_data']['holding_id'] = holding_id
     context.user_data['flow_data']['symbol'] = holding.symbol
@@ -847,9 +863,8 @@ async def sell_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
     firefly_client.create_transaction(tx_payload)
     record_activity("sell", f"Sold {data['qty']} {data['symbol']}", data["revenue"])
     
-    await query.edit_message_text(f"✅ Successfully recorded sale of {data['qty']} {data['symbol']}!")
-    await start(update, context)
-    return MAIN_MENU
+    msg = f"✅ Successfully recorded sale of {data['qty']} {data['symbol']}!"
+    return await send_receipt_and_main_menu(update, context, msg)
 
 
 # --- FLOW 3: DEPOSIT ---
@@ -936,9 +951,7 @@ async def deposit_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
     record_activity("deposit", f"Deposited: {data['description']}", activity_amount)
     
-    await query.edit_message_text(log_msg, parse_mode="Markdown")
-    await start(update, context)
-    return MAIN_MENU
+    return await send_receipt_and_main_menu(update, context, log_msg)
 
 
 # --- FLOW 4: ADD DEBT (You owe) ---
@@ -1012,7 +1025,7 @@ async def create_debt_transaction_and_log(data, message):
         f"• **Amount**: `{data['amount']:,.2f} {acc_currency}`\n"
         f"• **Due Date**: `{data.get('due') or 'None'}`"
     )
-    await message.reply_text(msg_text, parse_mode="Markdown")
+    return msg_text
 
 async def debt_lender(update: Update, context: ContextTypes.DEFAULT_TYPE):
     from app.utils.parsers import parse_natural_debt_or_loan
@@ -1071,9 +1084,8 @@ async def debt_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # If we already have the due date from AI parsing, skip asking and create immediately!
     if data.get('due'):
         await query.edit_message_text("💾 Creating transaction & saving payment terms...")
-        await create_debt_transaction_and_log(data, query.message)
-        await start(update, context)
-        return MAIN_MENU
+        msg_text = await create_debt_transaction_and_log(data, query.message)
+        return await send_receipt_and_main_menu(update, context, msg_text)
         
     keyboard = [[InlineKeyboardButton("🔙 Cancel", callback_data="back_main")]]
     await query.edit_message_text("When is this due? (Format: YYYY-MM-DD or 'Skip')", reply_markup=InlineKeyboardMarkup(keyboard))
@@ -1083,9 +1095,8 @@ async def debt_due(update: Update, context: ContextTypes.DEFAULT_TYPE):
     data = context.user_data['flow_data']
     data['due'] = update.message.text
     
-    await create_debt_transaction_and_log(data, update.message)
-    await start(update, context)
-    return MAIN_MENU
+    msg_text = await create_debt_transaction_and_log(data, update.message)
+    return await send_receipt_and_main_menu(update, context, msg_text)
 
 
 # --- FLOW 5: ADD BORROWER (Owes you) ---
@@ -1159,7 +1170,7 @@ async def create_borrow_transaction_and_log(data, message):
         f"• **Amount**: `{data['amount']:,.2f} {acc_currency}`\n"
         f"• **Due Date**: `{data.get('due') or 'None'}`"
     )
-    await message.reply_text(msg_text, parse_mode="Markdown")
+    return msg_text
 
 async def borrow_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
     from app.utils.parsers import parse_natural_debt_or_loan
@@ -1217,9 +1228,8 @@ async def borrow_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # If we already have the due date from AI parsing, skip asking and create immediately!
     if data.get('due'):
         await query.edit_message_text("💾 Creating transaction & saving payment terms...")
-        await create_borrow_transaction_and_log(data, query.message)
-        await start(update, context)
-        return MAIN_MENU
+        msg_text = await create_borrow_transaction_and_log(data, query.message)
+        return await send_receipt_and_main_menu(update, context, msg_text)
         
     keyboard = [[InlineKeyboardButton("🔙 Cancel", callback_data="back_main")]]
     await query.edit_message_text("When is this due? (Format: YYYY-MM-DD or 'Skip')", reply_markup=InlineKeyboardMarkup(keyboard))
@@ -1229,9 +1239,8 @@ async def borrow_due(update: Update, context: ContextTypes.DEFAULT_TYPE):
     data = context.user_data['flow_data']
     data['due'] = update.message.text
     
-    await create_borrow_transaction_and_log(data, update.message)
-    await start(update, context)
-    return MAIN_MENU
+    msg_text = await create_borrow_transaction_and_log(data, update.message)
+    return await send_receipt_and_main_menu(update, context, msg_text)
 
 
 # --- FLOW 6: TRANSFER ---
@@ -1342,10 +1351,7 @@ async def transfer_dest(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"• **Amount Sent**: `{source_deduct_amount:,.2f} {source_curr}`\n"
         + (f"• **Amount Received**: `{dest_add_amount:,.2f} {dest_curr}`\n" if source_curr != dest_curr else "")
     )
-    
-    await query.edit_message_text(msg, parse_mode="Markdown")
-    await start(update, context)
-    return MAIN_MENU
+    return await send_receipt_and_main_menu(update, context, msg)
 
 # Fallbacks
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -1493,90 +1499,44 @@ def get_conversation_handler():
 
 # --- VIEW FLOWS (Stateless) ---
 async def view_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Entry point for /view."""
-    keyboard = [
-        [InlineKeyboardButton("🏦 My Accounts", callback_data="view_acc")],
-        [InlineKeyboardButton("📈 My Portfolio", callback_data="view_port")],
-        [InlineKeyboardButton("🤝 Debt Overview", callback_data="view_debt")],
-        [InlineKeyboardButton("📊 Total Net Worth", callback_data="view_nw")],
-        [InlineKeyboardButton("🔙 Back to Main Menu", callback_data="back_main")]
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    msg = "What would you like to view?"
-    if update.message:
-        await update.message.reply_text(msg, reply_markup=reply_markup)
+    """Entry point for /view. Combines all vault data into a single large report."""
+    if update.callback_query:
+        await update.callback_query.answer("Fetching vault data...")
+        await update.callback_query.edit_message_text("🔄 Compiling your comprehensive vault report. Please wait...")
     else:
-        query = update.callback_query
-        await query.answer()
-        await query.edit_message_text(msg, reply_markup=reply_markup)
-    return MAIN_MENU
-
-async def view_accounts_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-    
+        status_msg = await update.message.reply_text("🔄 Compiling your comprehensive vault report. Please wait...")
+        
+    # 1. Accounts
     accounts = firefly_client.get_accounts("asset")
-    msg = format_accounts_report(accounts)
+    acc_msg = format_accounts_report(accounts)
     
-    keyboard = [[InlineKeyboardButton("🔙 Return to Main Menu", callback_data="back_main")]]
-    await query.edit_message_text(msg, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(keyboard))
-    return MAIN_MENU
-
-async def view_portfolio_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-    
+    # 2. Portfolio
     db = SessionLocal()
     holdings = db.query(Holding).all()
-    db.close()
+    port_msg = format_portfolio_report(holdings)
     
-    msg = format_portfolio_report(holdings)
+    # 3. Debt
+    receivables_accs = firefly_client.get_accounts("expense") # Borrowers who owe us
+    liabilities_accs = firefly_client.get_accounts("revenue") # Lenders we owe
+    debt_msg = format_debt_report(receivables_accs, liabilities_accs)
     
-    keyboard = [[InlineKeyboardButton("🔙 Return to Main Menu", callback_data="back_main")]]
-    await query.edit_message_text(msg, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(keyboard))
-    return MAIN_MENU
-
-async def view_debt_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-    
-    receivables = firefly_client.get_accounts("expense") # Borrowers who owe us
-    liabilities = firefly_client.get_accounts("revenue") # Lenders we owe
-    
-    msg = format_debt_report(receivables, liabilities)
-    
-    keyboard = [[InlineKeyboardButton("🔙 Return to Main Menu", callback_data="back_main")]]
-    await query.edit_message_text(msg, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(keyboard))
-    return MAIN_MENU
-
-async def view_networth_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-    
+    # 4. Net Worth
     from app.modules.market.forex import get_exchange_rate
     from app.config import config
+    from app.modules.market.service import market_service
     target_currency = config.DEFAULT_CURRENCY if hasattr(config, 'DEFAULT_CURRENCY') else "VND"
     
-    def sum_converted_accounts(accounts):
+    def sum_converted_accounts(accs):
         total = 0.0
-        for a in accounts:
+        for a in accs:
             bal = abs(float(a["attributes"].get("current_balance", 0.0)))
             curr = a["attributes"].get("currency_code", target_currency)
             if curr != target_currency:
                 bal *= get_exchange_rate(curr, target_currency)
             total += bal
         return total
-    
-    # 1. Cash
-    accounts = firefly_client.get_accounts("asset")
+        
     cash = sum_converted_accounts(accounts)
-    
-    # 2. Portfolio (Live Valuations)
-    db = SessionLocal()
-    holdings = db.query(Holding).all()
-    db.close()
-    
-    from app.modules.market.service import market_service
     assets = 0.0
     for h in holdings:
         live_price_usd = market_service.get_price(h.symbol, h.asset_type)
@@ -1586,27 +1546,24 @@ async def view_networth_callback(update: Update, context: ContextTypes.DEFAULT_T
         else:
             currency = h.currency if hasattr(h, "currency") else "VND"
             assets += h.total_spent * get_exchange_rate(currency, target_currency)
-    
-    # 3. Debt (Filter out Investments account to fix visual debt column mapping)
-    receivables_accs = [r for r in firefly_client.get_accounts("expense") if r["attributes"]["name"].lower() != "investments"]
-    receivables = sum_converted_accounts(receivables_accs)
-    
-    liabilities_accs = firefly_client.get_accounts("revenue")
+            
+    filtered_receivables = [r for r in receivables_accs if r["attributes"]["name"].lower() != "investments"]
+    receivables = sum_converted_accounts(filtered_receivables)
     liabilities = sum_converted_accounts(liabilities_accs)
     
-    msg = format_net_worth(cash, assets, receivables, liabilities)
+    db.close()
     
-    keyboard = [[InlineKeyboardButton("🔙 Return to Main Menu", callback_data="back_main")]]
-    await query.edit_message_text(msg, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(keyboard))
-    return MAIN_MENU
+    nw_msg = format_net_worth(cash, assets, receivables, liabilities)
+    combined_msg = f"{acc_msg}\n\n---\n\n{port_msg}\n\n---\n\n{debt_msg}\n\n---\n\n{nw_msg}"
+    
+    if not update.callback_query:
+        await status_msg.delete()
+        
+    return await send_receipt_and_main_menu(update, context, combined_msg)
 
 def get_view_handlers():
     """Returns a list of handlers for the view operations, to be registered alongside the ConversationHandler."""
     return [
         CommandHandler('view', view_cmd),
-        CallbackQueryHandler(view_cmd, pattern="^trigger_view$"),
-        CallbackQueryHandler(view_accounts_callback, pattern="^view_acc$"),
-        CallbackQueryHandler(view_portfolio_callback, pattern="^view_port$"),
-        CallbackQueryHandler(view_debt_callback, pattern="^view_debt$"),
-        CallbackQueryHandler(view_networth_callback, pattern="^view_nw$")
+        CallbackQueryHandler(view_cmd, pattern="^trigger_view$")
     ]
