@@ -49,6 +49,12 @@ How does data travel from the user's phone to the financial ledger?
    - The log is simultaneously pushed into an **In-Memory Bounded FIFO Queue**, instantly updating the Web Dashboard without triggering an expensive database read.
 7. **Feedback**: The bot replies to the user with a formatted markdown receipt.
 
+### 🤝 Debt Management Sub-System
+FinanOS treats debt management as a first-class feature by combining double-entry accounting with local state tracking:
+- **Ledger Recording**: When a user borrows/lends money, the transaction is recorded as a double-entry record in Firefly III (moving funds between an Asset account and an Expense/Revenue Liability account).
+- **Term Tracking**: Simultaneously, the specific terms (Due Date, Interest Rate) are saved in the local SQLite database.
+- **Risk Assessment**: The dashboard uses a **Min-Heap** algorithm to evaluate all outstanding debts against the user's total liquid cash, immediately flagging high-risk liabilities or debts that are close to their due date.
+
 ---
 
 ## 3. Data Structures & Algorithms (DSA) Integrations
