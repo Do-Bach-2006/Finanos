@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinanOS - System Workflow</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'base',
+            themeVariables: {
+                primaryColor: '#e0f2fe',
+                primaryTextColor: '#0f172a',
+                primaryBorderColor: '#0284c7',
+                lineColor: '#64748b',
+                secondaryColor: '#fef08a',
+                tertiaryColor: '#dcfce7'
+            },
+            flowchart: { curve: 'basis' } // Tạo đường cong mềm mại
+        });
+    </script>
+    <style>
+        :root {
+            --bg: #f8fafc;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --primary: #0ea5e9;
+            --primary-dark: #0369a1;
+            --card-bg: #ffffff;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            color: var(--primary-dark);
+            margin: 0 0 10px 0;
+            font-weight: 800;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            margin: 0;
+            max-width: 800px;
+        }
+
+        .presentation-container {
+            display: flex;
+            gap: 40px;
+            width: 100%;
+            max-width: 1600px;
+            align-items: flex-start;
+        }
+
+        .diagram-section {
+            flex: 1.2;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+        }
+
+        .notes-section {
+            flex: 0.8;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .step-card {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            border-left: 6px solid var(--primary);
+            transition: transform 0.2s ease;
+        }
+
+        .step-card:hover {
+            transform: translateX(10px);
+        }
+
+        .step-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--primary-dark);
+            margin-bottom: 12px;
+        }
+
+        .step-title i {
+            font-size: 1.4rem;
+        }
+
+        .step-desc {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: var(--text-main);
+            margin: 0 0 15px 0;
+        }
+
+        .dsa-tag {
+            display: inline-block;
+            background: #e0f2fe;
+            color: #0369a1;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-right: 8px;
+            margin-bottom: 8px;
+        }
+
+        .dsa-tag.db {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .dsa-tag.ai {
+            background: #fef08a;
+            color: #854d0e;
+        }
+
+        @media (max-width: 1200px) {
+            .presentation-container {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">
+        <h1>FinanOS: Core Data Flow & Architecture</h1>
+        <p>Hệ thống xử lý tài chính Asynchronous Monolithic, ứng dụng Trí tuệ nhân tạo (AI) và các Cấu trúc dữ liệu &
+            Thuật toán (DSA) tự cài đặt để đạt hiệu năng tối đa.</p>
+    </div>
+
+    <div class="presentation-container">
+
+        <!-- Sơ đồ Mermaid -->
+        <div class="diagram-section">
+            <div class="mermaid">
+                graph TD
+                classDef user fill:#3b82f6,stroke:#1e3a8a,stroke-width:2px,color:#fff,font-weight:bold;
+                classDef bot fill:#f8fafc,stroke:#94a3b8,stroke-width:2px;
+                classDef ai fill:#fef08a,stroke:#ca8a04,stroke-width:2px,font-weight:bold;
+                classDef algo fill:#e0f2fe,stroke:#0284c7,stroke-width:2px,font-weight:bold;
+                classDef db fill:#dcfce7,stroke:#16a34a,stroke-width:2px,font-weight:bold;
+
+                User((Người dùng<br>Telegram)):::user
+
+                subgraph Phase_1 [1. Tiếp nhận & AI Parsing]
+                direction TB
+                TG[Telegram Bot API<br>Conversation FSM]:::bot
+                RR[Round-Robin Distributor<br>Cân bằng tải API]:::algo
+                LLM[Google Gemini AI<br>Trích xuất JSON]:::ai
+                end
+
+                subgraph Phase_2 [2. Thuật toán Xử lý & Làm sạch]
+                direction TB
+                Cache[(Hashtable Cache<br>Giá & Tỷ giá)]:::algo
+                Conv[Currency Converter<br>Quy đổi ra VND]:::algo
+                SW[Smith-Waterman<br>Fuzzy Find CS2]:::algo
+                end
+
+                subgraph Phase_3 [3. Sổ cái & Trạng thái Cục bộ]
+                direction LR
+                FF[(Firefly III API<br>Sổ cái kép SQL)]:::db
+                SQL[(SQLite<br>Cache & Logs)]:::db
+                Debt[(SQLite<br>Kỳ hạn Công nợ)]:::db
+                end
+
+                subgraph Phase_4 [4. Render Giao diện Tốc độ cao]
+                direction TB
+                FIFO[FIFO Queue<br>Linked List Feed]:::algo
+                Heap[Min-Heap<br>Sắp xếp Nợ xấu]:::algo
+                Dash((Web Dashboard)):::user
+                end
+
+                User -- "1. Nhập: Mua 5 AAPL giá 180 USD" --> TG
+                TG -- "2. Kích hoạt FSM" --> RR
+                RR -- "3. Gọi Model không bị chặn" --> LLM
+                LLM -- "4. Trả về: AAPL, 5, 180, USD" --> Cache
+
+                Cache -- "5a. Fetch Tỷ giá O(1)" --> Conv
+                LLM -- "5b. Nếu sai tên skin?" --> SW
+                SW -- "Tên chuẩn xác" --> Conv
+
+                Conv -- "6a. POST Double-Entry" --> FF
+                Conv -- "6b. Log hoạt động" --> SQL
+
+                SQL -- "7. Enqueue O(1)" --> FIFO
+                Debt -- "8. Tính độ nguy hiểm" --> Heap
+
+                FIFO -- "9. Live Feed" --> Dash
+                Heap -- "10. Cảnh báo nợ" --> Dash
+
+                FF -- "11. Trả Receipt" --> TG
+                TG -- "12. Phản hồi Markdown" --> User
+            </div>
+        </div>
+
+        <!-- Kịch bản Thuyết trình -->
+        <div class="notes-section">
+            <div class="step-card" style="border-left-color: #f59e0b;">
+                <div class="step-title">
+                    <i class="fa-solid fa-robot" style="color: #f59e0b;"></i>
+                    Bước 1: Phân tích Ý đồ (AI Parsing & Routing)
+                </div>
+                <p class="step-desc">
+                    Hệ thống nhận lệnh tự nhiên từ Telegram. Thay vì dùng Regex cứng nhắc, hệ thống dùng <strong>Google
+                        Gemini</strong> để dịch text thành JSON. Để tránh giới hạn miễn phí (Rate-limit) của API, một
+                    thuật toán điều phối được áp dụng.
+                </p>
+                <div class="dsa-tag ai"><i class="fa-solid fa-brain"></i> Gemini Flash</div>
+                <div class="dsa-tag"><i class="fa-solid fa-arrows-spin"></i> Round-Robin (Modulo)</div>
+            </div>
+
+            <div class="step-card" style="border-left-color: #0ea5e9;">
+                <div class="step-title">
+                    <i class="fa-solid fa-wand-magic-sparkles" style="color: #0ea5e9;"></i>
+                    Bước 2: Chuẩn hóa Dữ liệu (Market & Conversion)
+                </div>
+                <p class="step-desc">
+                    Dữ liệu thô từ AI được làm sạch. Nếu người dùng mua hàng bằng USD/Crypto, tỷ giá sẽ được lấy từ
+                    Cache cục bộ. Nếu người dùng nhập sai tên vật phẩm (VD: Skin CS2), thuật toán sinh học sẽ tìm ra
+                    chuỗi khớp nhất.
+                </p>
+                <div class="dsa-tag"><i class="fa-solid fa-bolt"></i> Hashtable (O(1) Cache)</div>
+                <div class="dsa-tag"><i class="fa-solid fa-dna"></i> Smith-Waterman (Fuzzy)</div>
+                <div class="dsa-tag"><i class="fa-solid fa-coins"></i> Scalar Currency Logic</div>
+            </div>
+
+            <div class="step-card" style="border-left-color: #10b981;">
+                <div class="step-title">
+                    <i class="fa-solid fa-server" style="color: #10b981;"></i>
+                    Bước 3: Thực thi Kép (Dual Database Execution)
+                </div>
+                <p class="step-desc">
+                    FinanOS áp dụng chiến lược 2 Database. Sổ cái <strong>Firefly III</strong> đóng vai trò cốt lõi
+                    (Source of Truth) cho các bút toán kép. Trong khi đó, <strong>SQLite</strong> lưu trữ Meta-data (Tài
+                    sản CS2, Crypto, Công nợ) để giảm tải cho DB chính.
+                </p>
+                <div class="dsa-tag db"><i class="fa-solid fa-book"></i> Firefly III (REST)</div>
+                <div class="dsa-tag db"><i class="fa-solid fa-database"></i> SQLite (Local State)</div>
+            </div>
+
+            <div class="step-card" style="border-left-color: #8b5cf6;">
+                <div class="step-title">
+                    <i class="fa-solid fa-gauge-high" style="color: #8b5cf6;"></i>
+                    Bước 4: UI & Phản hồi Tốc độ cao (RAM Execution)
+                </div>
+                <p class="step-desc">
+                    Việc truy vấn SQL liên tục để render Web Dashboard rất tốn kém (O(N)). FinanOS đẩy transaction mới
+                    vào một Hàng đợi trong RAM. Các khoản nợ xấu được thả vào Cây nhị phân để luôn đẩy rủi ro lớn nhất
+                    lên cảnh báo đầu tiên.
+                </p>
+                <div class="dsa-tag"><i class="fa-solid fa-list-ol"></i> Bounded FIFO (Linked List)</div>
+                <div class="dsa-tag"><i class="fa-solid fa-triangle-exclamation"></i> Min-Heap (Priority Queue)</div>
+            </div>
+            <div class="step-card" style="border-left-color: #ef4444;">
+                <div class="step-title">
+                    <i class="fa-solid fa-handshake" style="color: #ef4444;"></i>
+                    Bước 5: Quản lý Công Nợ & Rủi ro
+                </div>
+                <p class="step-desc">
+                    Hệ thống tách biệt quản lý nợ thành một phân hệ riêng. Giao dịch gốc (Vay/Cho vay) được ghi sổ kép tại Firefly III, trong khi <strong>kỳ hạn (Due Date)</strong> và trạng thái thanh toán được lưu độc lập tại SQLite. Từ đây, thuật toán Min-Heap mới có cơ sở dữ liệu để liên tục đánh giá và cảnh báo nợ xấu.
+                </p>
+                <div class="dsa-tag db"><i class="fa-solid fa-clock"></i> SQLite (Due Dates)</div>
+                <div class="dsa-tag db"><i class="fa-solid fa-scale-balanced"></i> Double-Entry (Firefly)</div>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+
+</html>
